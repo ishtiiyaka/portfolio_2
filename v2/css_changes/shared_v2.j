@@ -2,21 +2,24 @@
  * ═══════════════════════════════════════════════════════════════════════════
  * SHARED.JS — Global Interactions & Animations
  * ═══════════════════════════════════════════════════════════════════════════
+ * THEME: Biological / Organic Dark
+ *
+ * Changes from base:
+ *   - Cursor: bioluminescent particle trail (replaces dot + ring)
+ *   - Ambient canvas: bioluminescent teal + amber orbs
+ *   - Hero canvas: teal/amber particle field
+ *   - All colour values updated to biological palette
  *
  * Handles:
  *   1. Footer year auto-fill
- *   2. Custom cursor (dot + trailing ring)
- *   3. Smart page loader (full anim on first visit, fast fade after)
+ *   2. Bioluminescent cursor trail (15 fading particles)
+ *   3. Smart page loader
  *   4. GSAP scroll reveals (.rv, .rv-l, .rv-r, .rv-s)
- *   5. Nav scroll-state (transparent → solid)
+ *   5. Nav scroll-state
  *   6. Skill bar fill animations
- *   7. Hero entrance timeline (index/main page)
- *   8. Terminal typewriter (contact section)
- *   9. Stack-page scroll spy (index-list highlight)
- *
- * Include this file at the bottom of every page that has
- * <link rel="stylesheet" href="shared.css"> in the head.
- * GSAP + ScrollTrigger must be loaded before this file.
+ *   7. Hero entrance timeline
+ *   8. Terminal typewriter
+ *   9. Stack-page scroll spy
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -27,31 +30,75 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 
-  /* ─── 2. CUSTOM CURSOR ────────────────────────────────────────────────── */
-  const cur     = document.getElementById('cur');
-  const curRing = document.getElementById('cur-ring');
+  /* ─── 2. BIOLUMINESCENT CURSOR TRAIL ─────────────────────────────────── */
+  /*
+   * Replaces the old dot + ring with a cascade of fading particles
+   * that trail behind the cursor like bioluminescence in dark water.
+   * Requires: <div id="cur"></div> in HTML.
+   * Trail dots are created here and styled via .bio-trail-dot in shared.css.
+   */
+  const cur = document.getElementById('cur');
 
-  if (cur && curRing) {
-    let mx = 0, my = 0, rx = 0, ry = 0;
+  if (cur) {
+    const TRAIL_LENGTH = 16;
+    const trail = [];
 
-    // Dot follows mouse instantly
+    // Build trail particle divs
+    for (let i = 0; i < TRAIL_LENGTH; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'bio-trail-dot';
+      // Size decreases toward the tail
+      const size = Math.max(2, 8 - i * 0.35);
+      dot.style.cssText = `width:${size}px;height:${size}px;`;
+      document.body.appendChild(dot);
+      trail.push({ el: dot, x: -100, y: -100 });
+    }
+
+    let mx = -100, my = -100;
+
+    // Main dot follows mouse instantly
     document.addEventListener('mousemove', e => {
       mx = e.clientX; my = e.clientY;
       cur.style.left = mx + 'px';
       cur.style.top  = my + 'px';
     });
 
-    // Ring trails with smooth easing
-    const animRing = () => {
-      rx += (mx - rx) * 0.1;
-      ry += (my - ry) * 0.1;
-      curRing.style.left = rx + 'px';
-      curRing.style.top  = ry + 'px';
-      requestAnimationFrame(animRing);
-    };
-    animRing();
+    // Trail cascades with decreasing speed — earlier particles are faster
+    const animTrail = () => {
+      let px = mx, py = my;
+      trail.forEach((dot, i) => {
+        // Speed decreases as we go toward the tail
+        const speed = 0.28 - i * 0.012;
+        dot.x += (px - dot.x) * Math.max(speed, 0.04);
+        dot.y += (py - dot.y) * Math.max(speed, 0.04);
 
-    // Enlarge cursor on interactive elements
+        dot.el.style.left    = dot.x + 'px';
+        dot.el.style.top     = dot.y + 'px';
+
+        // Opacity and glow fade toward the tail
+        const alpha = (1 - i / TRAIL_LENGTH) * 0.75;
+        dot.el.style.opacity = alpha;
+
+        // Teal → amber gradient through the trail (first few teal, then amber)
+        const t = i / TRAIL_LENGTH;
+        if (t < 0.5) {
+          // Teal core
+          dot.el.style.background = `rgba(0,255,204,${alpha})`;
+          dot.el.style.boxShadow  = `0 0 ${6 - i * 0.2}px rgba(0,255,204,0.6)`;
+        } else {
+          // Amber tail — like bioluminescent wake dissipating
+          dot.el.style.background = `rgba(255,170,68,${alpha * 0.6})`;
+          dot.el.style.boxShadow  = `0 0 ${4 - (i - 8) * 0.15}px rgba(255,170,68,0.4)`;
+        }
+
+        // Cascade: each dot leads the next
+        px = dot.x; py = dot.y;
+      });
+      requestAnimationFrame(animTrail);
+    };
+    animTrail();
+
+    // Enlarge main dot on interactive elements
     const onEnter = () => document.body.classList.add('hov');
     const onLeave = () => document.body.classList.remove('hov');
     const interactiveSelector = [
@@ -70,12 +117,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   /* ─── 3. GSAP SETUP ───────────────────────────────────────────────────── */
-  if (typeof gsap === 'undefined') return; // guard: GSAP not loaded
+  if (typeof gsap === 'undefined') return;
   gsap.registerPlugin(ScrollTrigger);
 
   const initAnimations = () => {
 
-    /* 3a. Nav transparency transition (only for .main-nav.transparent) */
+    /* 3a. Nav transparency transition */
     const transparentNav = document.querySelector('.main-nav.transparent');
     if (transparentNav) {
       window.addEventListener('scroll', () => {
@@ -90,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
       gsap.fromTo(el,
         { opacity: 0, y: 35 },
         {
-          opacity: 1, y: 0, duration: 1, ease: 'power3.out',
+          opacity: 1, y: 0, duration: 1.2, ease: 'power3.out',
           scrollTrigger: { trigger: el, start: 'top 85%', once: true }
         }
       );
@@ -101,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
       gsap.fromTo(el,
         { opacity: 0, x: -35 },
         {
-          opacity: 1, x: 0, duration: 1, ease: 'power3.out',
+          opacity: 1, x: 0, duration: 1.2, ease: 'power3.out',
           scrollTrigger: { trigger: el, start: 'top 85%', once: true }
         }
       );
@@ -112,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
       gsap.fromTo(el,
         { opacity: 0, x: 35 },
         {
-          opacity: 1, x: 0, duration: 1, ease: 'power3.out',
+          opacity: 1, x: 0, duration: 1.2, ease: 'power3.out',
           scrollTrigger: { trigger: el, start: 'top 85%', once: true }
         }
       );
@@ -123,20 +170,20 @@ document.addEventListener('DOMContentLoaded', () => {
       gsap.fromTo(el,
         { opacity: 0, scale: 0.94 },
         {
-          opacity: 1, scale: 1, duration: 1, ease: 'power3.out',
+          opacity: 1, scale: 1, duration: 1.2, ease: 'power3.out',
           scrollTrigger: { trigger: el, start: 'top 85%', once: true }
         }
       );
     });
 
 
-    /* 3f. Data panel blur-in (stack + project pages) */
+    /* 3f. Data panel — materialise from the deep (blur-in with glow) */
     gsap.utils.toArray('.data-panel').forEach(panel => {
       gsap.fromTo(panel,
-        { opacity: 0, scale: 0.96, filter: 'blur(4px)' },
+        { opacity: 0, scale: 0.96, filter: 'blur(6px)' },
         {
           opacity: 1, scale: 1, filter: 'blur(0px)',
-          duration: 0.9, ease: 'power2.out',
+          duration: 1.1, ease: 'power2.out',
           scrollTrigger: { trigger: panel, start: 'top 87%', once: true }
         }
       );
@@ -152,24 +199,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    /* 3h. Hero entrance timeline (index / main page only) */
+    /* 3h. Hero entrance timeline */
     if (document.querySelector('.h-name')) {
       const tl = gsap.timeline({ delay: 0.1 });
-      tl.to('.h-name .word', { y: 0, duration: 1.4, ease: 'power4.out', stagger: 0.12 })
-        .to('.h-eyebrow', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, '-=0.9')
-        .to('.h-role',    { opacity: 1, duration: 0.7, ease: 'power3.out' }, '-=0.5')
-        .to('.h-tagline', { opacity: 1, duration: 0.7, ease: 'power3.out' }, '-=0.4')
-        .to('.h-cta-row', { opacity: 1, duration: 0.7, ease: 'power3.out' }, '-=0.4')
-        .to('.h-coord',   { opacity: 1, duration: 0.7, ease: 'power3.out' }, '-=0.3')
-        .to('#scroll-cue',{ opacity: 1, duration: 0.7 }, '-=0.2');
+      tl.to('.h-name .word', { y: 0, duration: 1.6, ease: 'power4.out', stagger: 0.14 })
+        .to('.h-eyebrow', { opacity: 1, y: 0, duration: 1, ease: 'power3.out' }, '-=1')
+        .to('.h-role',    { opacity: 1, duration: 0.9, ease: 'power3.out' }, '-=0.6')
+        .to('.h-tagline', { opacity: 1, duration: 0.9, ease: 'power3.out' }, '-=0.5')
+        .to('.h-cta-row', { opacity: 1, duration: 0.9, ease: 'power3.out' }, '-=0.5')
+        .to('.h-coord',   { opacity: 1, duration: 0.9, ease: 'power3.out' }, '-=0.4')
+        .to('#scroll-cue',{ opacity: 1, duration: 0.9 }, '-=0.3');
 
-      gsap.from('.photo-frame', { scale: 0.9, opacity: 0, duration: 1.6, delay: 0.5, ease: 'power4.out' });
-      gsap.from('.annot',       { opacity: 0, duration: 0.8, stagger: 0.2, delay: 1.2, ease: 'power3.out' });
-      gsap.from('.status-pill', { opacity: 0, y: 10, duration: 0.6, stagger: 0.15, delay: 1.5, ease: 'power3.out' });
+      gsap.from('.photo-frame', { scale: 0.88, opacity: 0, duration: 1.8, delay: 0.5, ease: 'power4.out' });
+      gsap.from('.annot',       { opacity: 0, duration: 1, stagger: 0.25, delay: 1.4, ease: 'power3.out' });
+      gsap.from('.status-pill', { opacity: 0, y: 10, duration: 0.8, stagger: 0.18, delay: 1.7, ease: 'power3.out' });
     }
 
 
-    /* 3i. Terminal typewriter effect (contact section) */
+    /* 3i. Terminal typewriter effect */
     const termSection = document.getElementById('contact');
     if (termSection && document.getElementById('term-text')) {
       ScrollTrigger.create({
@@ -195,8 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    /* 3j. Stack-page scroll spy — highlights the index-list link
-          for the currently visible .module section               */
+    /* 3j. Stack-page scroll spy */
     const modules  = document.querySelectorAll('.module');
     const idxLinks = document.querySelectorAll('.index-list a');
     if (modules.length && idxLinks.length) {
@@ -214,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    /* 3k. RTOS / progress bar fills (project-bcm style) */
+    /* 3k. Progress bar fills */
     document.querySelectorAll('.fill-anim').forEach(bar => {
       ScrollTrigger.create({
         trigger: bar, start: 'top 90%', once: true,
@@ -222,19 +268,13 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // ── NEW v2 UPGRADE FUNCTIONS ──────────────────────────────────────────
-    // All wired through initAll() defined below the DOMContentLoaded block.
-    // To disable any single feature, see the comment at the top of its function.
+    // Wire all new init functions
     if (typeof initAll === 'function') initAll();
 
   }; // end initAnimations
 
 
   /* ─── 4. SMART LOADER ─────────────────────────────────────────────────── */
-  /*
-   * First visit  → full progress-bar loader animation (~1.2s)
-   * Return visit → instant fade (sessionStorage flag)
-   */
   const loader = document.getElementById('loader');
 
   if (loader) {
@@ -246,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let pct = 0;
       const iv = setInterval(() => {
         pct = Math.min(100, pct + Math.random() * 18 + 4);
-        if (ldPct)  ldPct.textContent  = `Loading system... ${Math.floor(pct)}%`;
+        if (ldPct)  ldPct.textContent  = `Initialising organism... ${Math.floor(pct)}%`;
         if (ldFill) ldFill.style.width = pct + '%';
 
         if (pct >= 100) {
@@ -254,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
           sessionStorage.setItem('ia_loaded', '1');
           setTimeout(() => {
             gsap.to(loader, {
-              opacity: 0, duration: 0.7, ease: 'power2.inOut',
+              opacity: 0, duration: 0.9, ease: 'power2.inOut',
               onComplete: () => { loader.style.display = 'none'; initAnimations(); }
             });
           }, 280);
@@ -262,7 +302,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 60);
 
     } else {
-      // Fast exit on subsequent navigations
       gsap.to(loader, {
         opacity: 0, duration: 0.22,
         onComplete: () => { loader.style.display = 'none'; initAnimations(); }
@@ -270,7 +309,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
   } else {
-    // No loader on this page — run animations immediately
     initAnimations();
   }
 
@@ -278,39 +316,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   NEW INIT FUNCTIONS — v2 Upgrade
-   All called inside initAnimations() above (already wired in via initAll())
-   Each function is self-contained and safely no-ops if its dependency
-   (DOM element or CDN library) is not present on the current page.
+   NEW INIT FUNCTIONS — v2 Upgrade (Biological Dark Edition)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─── LENIS SMOOTH SCROLL ────────────────────────────────────────────────────
-   Requires: Lenis CDN script loaded before shared.js
-   To disable: remove the Lenis CDN <script> tag
-   Pages: main.html, about.html, education.html
-─────────────────────────────────────────────────────────────────────────── */
+
+/* ─── LENIS SMOOTH SCROLL ─────────────────────────────────────────────────── */
 function initLenis() {
   if (typeof Lenis === 'undefined') return;
 
-  const lenis = new Lenis({ lerp: 0.08, smoothWheel: true });
-  window._lenis = lenis; // expose so section-dots can call lenis.scrollTo()
+  const lenis = new Lenis({ lerp: 0.06, smoothWheel: true }); // slightly slower — organic feel
+  window._lenis = lenis;
 
-  // Hook into GSAP ticker for perfect sync with ScrollTrigger
   gsap.ticker.add((time) => { lenis.raf(time * 1000); });
   gsap.ticker.lagSmoothing(0);
 
-  // Remove native smooth scroll to avoid double-smooth conflict
   document.documentElement.style.scrollBehavior = 'auto';
 }
 
 
-/* ─── MAGNETIC BUTTON EFFECT ─────────────────────────────────────────────────
-   Selector: .mag-btn  — add this class to any CTA you want magnetic
-   Strength: 0.38 (increase = stronger pull)
-   Range:    90px (how close cursor must be before magnet activates)
-   To disable for one button: remove class mag-btn
-   To disable entirely: delete this function call from initAnimations()
-─────────────────────────────────────────────────────────────────────────── */
+/* ─── MAGNETIC BUTTON EFFECT ──────────────────────────────────────────────── */
 function initMagneticButtons() {
   const STRENGTH = 0.38;
   const RANGE    = 90;
@@ -325,44 +349,33 @@ function initMagneticButtons() {
       const dist = Math.hypot(dx, dy);
 
       if (dist < RANGE) {
-        const tx = dx * STRENGTH;
-        const ty = dy * STRENGTH;
-        btn.style.transform = `translate(${tx}px, ${ty}px)`;
+        btn.style.transform = `translate(${dx * STRENGTH}px, ${dy * STRENGTH}px)`;
       }
     });
 
     btn.addEventListener('mouseleave', () => {
-      // Spring back to origin
       btn.style.transform = 'translate(0px, 0px)';
     });
   });
 }
 
 
-/* ─── VANILLA TILT 3D ────────────────────────────────────────────────────────
-   Applied to: .proj-card  and  .tilt-card (add this class to any element)
-   Requires: VanillaTilt CDN script loaded before shared.js
-   To add tilt to a new element: add class tilt-card
-   To disable tilt on one element: add data-tilt-disabled attribute
-   To disable entirely: remove VanillaTilt CDN script
-─────────────────────────────────────────────────────────────────────────── */
+/* ─── VANILLA TILT 3D ────────────────────────────────────────────────────── */
 function initVanillaTilt() {
   if (typeof VanillaTilt === 'undefined') return;
 
-  // Project cards — subtle tilt with soft glare
   const projCards = document.querySelectorAll('.proj-card:not([data-tilt-disabled])');
   if (projCards.length) {
     VanillaTilt.init(projCards, {
-      max:        7,
-      speed:      400,
+      max:        6,
+      speed:      500,
       glare:      true,
-      'max-glare': 0.10,
+      'max-glare': 0.08, // subtle — bioluminescent sheen not harsh glare
       perspective: 900,
       scale:       1.01,
     });
   }
 
-  // Any generic .tilt-card (e.g., terminal block in contact)
   const tiltCards = document.querySelectorAll('.tilt-card:not([data-tilt-disabled])');
   if (tiltCards.length) {
     VanillaTilt.init(tiltCards, {
@@ -375,11 +388,7 @@ function initVanillaTilt() {
 }
 
 
-/* ─── PROJECT CARD SPOTLIGHT ─────────────────────────────────────────────────
-   Creates a radial-gradient spotlight that follows cursor inside each card.
-   Requires: .pc-spotlight div inside each .proj-card (added in main.html)
-   To disable: remove <div class="pc-spotlight"> from each proj-card
-─────────────────────────────────────────────────────────────────────────── */
+/* ─── PROJECT CARD SPOTLIGHT ──────────────────────────────────────────────── */
 function initProjectSpotlight() {
   document.querySelectorAll('.proj-card').forEach(card => {
     const spot = card.querySelector('.pc-spotlight');
@@ -396,14 +405,9 @@ function initProjectSpotlight() {
 }
 
 
-/* ─── ANIMATED COUNT-UP ──────────────────────────────────────────────────────
-   Trigger: IntersectionObserver on elements with [data-count] attribute
-   Duration: 1400ms with easeOutExpo curve
-   Non-numeric values (∞, UET, etc.) are skipped automatically
-   To add count-up to an element: add data-count="NUMBER" attribute
-─────────────────────────────────────────────────────────────────────────── */
+/* ─── ANIMATED COUNT-UP ────────────────────────────────────────────────────── */
 function initCountUp() {
-  const easeOut = t => 1 - Math.pow(1 - t, 4); // easeOutQuart
+  const easeOut = t => 1 - Math.pow(1 - t, 4);
 
   const animate = (el, target, suffix) => {
     const start    = performance.now();
@@ -413,7 +417,7 @@ function initCountUp() {
       const current = Math.round(easeOut(t) * target);
       el.textContent = current + suffix;
       if (t < 1) requestAnimationFrame(step);
-      else el.textContent = target + suffix; // ensure exact final value
+      else el.textContent = target + suffix;
     };
     requestAnimationFrame(step);
   };
@@ -424,12 +428,10 @@ function initCountUp() {
       const el     = entry.target;
       const raw    = el.dataset.count;
       const num    = parseFloat(raw);
-      if (isNaN(num)) return; // skip ∞, UET, etc.
-
-      // Detect and preserve suffix (e.g. "+")
+      if (isNaN(num)) return;
       const suffix = el.dataset.countSuffix || '';
       animate(el, num, suffix);
-      observer.unobserve(el); // only run once
+      observer.unobserve(el);
     });
   }, { threshold: 0.5 });
 
@@ -437,24 +439,16 @@ function initCountUp() {
 }
 
 
-/* ─── SECTION INDICATOR DOTS ─────────────────────────────────────────────────
-   Reads all <section id="..."> on the page and builds a fixed right-side
-   dot navigation. Active dot updates on scroll.
-   Requires: <div id="section-dots"></div> in HTML
-   To disable entirely: remove that div from the page HTML
-   A section is automatically included if it has an id="" attribute.
-─────────────────────────────────────────────────────────────────────────── */
+/* ─── SECTION INDICATOR DOTS ──────────────────────────────────────────────── */
 function initSectionDots() {
   const container = document.getElementById('section-dots');
   if (!container) return;
 
-  // Collect all sections with IDs (excluding loader/nav/footer)
   const sections = Array.from(
     document.querySelectorAll('section[id], main[id]')
   );
   if (!sections.length) return;
 
-  // Build dots
   sections.forEach(sec => {
     const btn = document.createElement('button');
     btn.className = 'sec-dot';
@@ -485,15 +479,11 @@ function initSectionDots() {
   };
 
   window.addEventListener('scroll', updateDots, { passive: true });
-  updateDots(); // set initial state
+  updateDots();
 }
 
 
-/* ─── NAV SCROLL-SPY GLOW ────────────────────────────────────────────────────
-   Highlights nav links whose target section is in view.
-   Works on main.html anchor links (#section-id) and active class links.
-   To disable: remove data-active logic (CSS underline still works via .active)
-─────────────────────────────────────────────────────────────────────────── */
+/* ─── NAV SCROLL-SPY GLOW ─────────────────────────────────────────────────── */
 function initNavSpy() {
   const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
   if (!navLinks.length) return;
@@ -521,25 +511,23 @@ function initNavSpy() {
 }
 
 
-/* ─── AMBIENT CANVAS ORBS ────────────────────────────────────────────────────
-   Draws softly drifting gradient orbs on a <canvas class="ambient-canvas">
-   placed inside a section.
-   Call: initAmbientCanvas(canvasElement)
-   To disable for a section: remove <canvas class="ambient-canvas"> from it
+/* ─── AMBIENT CANVAS ORBS (Bioluminescent) ───────────────────────────────────
+   Deep-sea ambient light: softly drifting bioluminescent glows.
+   Colour palette updated from copper/navy to teal/amber biological signals.
 ─────────────────────────────────────────────────────────────────────────── */
 function initAmbientCanvas(canvas) {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
 
-  // ── Orb definitions ──────────────────────────────────────────────────────
-  // Add/remove objects here to change the orb count and colours.
-  // radius: size, speedX/Y: drift speed, color: rgba string
+  // Bioluminescent orb definitions
+  // Teal (--accent #00ffcc) dominant, amber (--accent-2 #ffaa44) secondary
   const orbs = [
-    { x: 0.2, y: 0.3, r: 0.28, dx: 0.00025, dy: 0.00018, t: 0,   color: 'rgba(181,101,29,0.09)'  },
-    { x: 0.7, y: 0.6, r: 0.32, dx:-0.00020, dy: 0.00022, t: 1.5, color: 'rgba(26,58,110,0.12)'   },
-    { x: 0.5, y: 0.8, r: 0.22, dx: 0.00030, dy:-0.00025, t: 3.0, color: 'rgba(212,132,58,0.07)'  },
-    { x: 0.8, y: 0.2, r: 0.20, dx:-0.00018, dy:-0.00020, t: 2.0, color: 'rgba(26,58,110,0.08)'   },
-    { x: 0.1, y: 0.7, r: 0.18, dx: 0.00022, dy: 0.00015, t: 4.0, color: 'rgba(181,101,29,0.06)'  },
+    { x: 0.2, y: 0.3, r: 0.30, dx: 0.00025, dy: 0.00018, t: 0,   color: 'rgba(0,255,204,0.07)'  },
+    { x: 0.7, y: 0.6, r: 0.34, dx:-0.00020, dy: 0.00022, t: 1.5, color: 'rgba(0,200,255,0.06)'  },
+    { x: 0.5, y: 0.8, r: 0.22, dx: 0.00030, dy:-0.00025, t: 3.0, color: 'rgba(255,170,68,0.05)' },
+    { x: 0.8, y: 0.2, r: 0.20, dx:-0.00018, dy:-0.00020, t: 2.0, color: 'rgba(0,255,204,0.05)'  },
+    { x: 0.1, y: 0.7, r: 0.18, dx: 0.00022, dy: 0.00015, t: 4.0, color: 'rgba(255,170,68,0.04)' },
+    { x: 0.55, y: 0.35, r: 0.16, dx: 0.00015, dy: 0.00028, t: 2.5, color: 'rgba(0,255,204,0.04)' },
   ];
 
   let W, H, raf;
@@ -551,17 +539,17 @@ function initAmbientCanvas(canvas) {
     canvas.height = H;
   };
 
-  const draw = (ts) => {
+  const draw = () => {
     ctx.clearRect(0, 0, W, H);
     orbs.forEach(o => {
-      // Parametric drift using sin/cos for organic movement
-      o.t += 0.004;
-      const px = (o.x + Math.sin(o.t * 1.3) * 0.12) * W;
-      const py = (o.y + Math.cos(o.t * 0.9) * 0.10) * H;
+      o.t += 0.003; // slightly slower — organic drift
+      const px = (o.x + Math.sin(o.t * 1.3) * 0.10) * W;
+      const py = (o.y + Math.cos(o.t * 0.9) * 0.08) * H;
       const rr = o.r * Math.min(W, H);
 
       const g = ctx.createRadialGradient(px, py, 0, px, py, rr);
       g.addColorStop(0, o.color);
+      g.addColorStop(0.5, o.color.replace(/[\d.]+\)$/, m => (parseFloat(m) * 0.3) + ')'));
       g.addColorStop(1, 'transparent');
       ctx.fillStyle = g;
       ctx.beginPath();
@@ -575,7 +563,6 @@ function initAmbientCanvas(canvas) {
   window.addEventListener('resize', resize, { passive: true });
   raf = requestAnimationFrame(draw);
 
-  // Cleanup if canvas is ever removed
   const mo = new MutationObserver(() => {
     if (!document.contains(canvas)) {
       cancelAnimationFrame(raf);
@@ -586,50 +573,65 @@ function initAmbientCanvas(canvas) {
 }
 
 
-/* ─── HERO CANVAS (Three.js particle field) ──────────────────────────────────
-   Creates a geometric particle field inside .hero-right
-   Requires: Three.js CDN loaded before shared.js
-   Requires: <canvas id="hero-canvas"> inside .hero-right
-   To disable: remove that canvas element from hero-right HTML
-   Particles: ~700 copper/white dots forming slow-rotating icosahedron lattice
+/* ─── HERO CANVAS (Three.js bioluminescent particle field) ───────────────────
+   Replaces copper/navy particles with bioluminescent teal/amber.
+   Deep-sea creature light patterns on a black void.
 ─────────────────────────────────────────────────────────────────────────── */
 function initHeroCanvas() {
   const canvas = document.getElementById('hero-canvas');
   if (!canvas || typeof THREE === 'undefined') return;
 
-  const parent  = canvas.parentElement;
-  const scene   = new THREE.Scene();
-  const camera  = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
+  const parent   = canvas.parentElement;
+  const scene    = new THREE.Scene();
+  const camera   = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
 
   camera.position.z = 5;
 
-  // ── Particles ─────────────────────────────────────────────────────────────
-  // Count/spread can be changed here without touching any other code
-  const PARTICLE_COUNT = 720;
+  // ── Bioluminescent particle field ────────────────────────────────────────
+  const PARTICLE_COUNT = 840;  // slightly more — denser field of organisms
   const SPREAD         = 4.5;
 
   const positions = new Float32Array(PARTICLE_COUNT * 3);
   const colors    = new Float32Array(PARTICLE_COUNT * 3);
 
-  const copperR = 181/255, copperG = 101/255, copperB = 29/255;
-  const blueR   =  26/255, blueG   =  58/255, blueB   = 110/255;
+  // Teal #00ffcc → R:0, G:1, B:0.8
+  // Amber #ffaa44 → R:1, G:0.667, B:0.267
+  // Deep water blue #00c8ff → R:0, G:0.784, B:1
+  const tealR  = 0/255,   tealG  = 255/255, tealB  = 204/255;
+  const amberR = 255/255, amberG = 170/255, amberB = 68/255;
+  const blueR  = 0/255,   blueG  = 200/255, blueB  = 255/255;
 
   for (let i = 0; i < PARTICLE_COUNT; i++) {
-    // Fibonacci sphere distribution for even coverage
+    // Fibonacci sphere for organic, even distribution
     const phi   = Math.acos(1 - 2 * (i + 0.5) / PARTICLE_COUNT);
     const theta = Math.PI * (1 + Math.sqrt(5)) * i;
-    const r     = SPREAD * (0.6 + Math.random() * 0.4);
+    const r     = SPREAD * (0.5 + Math.random() * 0.5);
 
     positions[i*3]   = r * Math.sin(phi) * Math.cos(theta);
     positions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
     positions[i*3+2] = r * Math.cos(phi);
 
-    // Mix copper and blue based on y position
-    const t = (positions[i*3+1] / SPREAD + 1) / 2;
-    colors[i*3]   = copperR * t + blueR * (1-t);
-    colors[i*3+1] = copperG * t + blueG * (1-t);
-    colors[i*3+2] = copperB * t + blueB * (1-t);
+    // Three-way colour mix based on position:
+    // Top → teal (bioluminescent signal)
+    // Middle → deep blue (deep water)
+    // Bottom → amber (warmth through organic tissue)
+    const t = (positions[i*3+1] / SPREAD + 1) / 2; // 0 bottom → 1 top
+    const noise = Math.random() * 0.15; // organic variation
+
+    if (t > 0.6) {
+      // Upper — teal
+      const blend = (t - 0.6) / 0.4;
+      colors[i*3]   = tealR * blend + blueR * (1-blend);
+      colors[i*3+1] = tealG * blend + blueG * (1-blend);
+      colors[i*3+2] = tealB * blend + blueB * (1-blend);
+    } else {
+      // Lower — amber to blue
+      const blend = t / 0.6;
+      colors[i*3]   = blueR * blend + amberR * (1-blend) + noise * 0.1;
+      colors[i*3+1] = blueG * blend + amberG * (1-blend);
+      colors[i*3+2] = blueB * blend + amberB * (1-blend);
+    }
   }
 
   const geo = new THREE.BufferGeometry();
@@ -637,10 +639,10 @@ function initHeroCanvas() {
   geo.setAttribute('color',    new THREE.BufferAttribute(colors,    3));
 
   const mat = new THREE.PointsMaterial({
-    size:         0.045,
-    vertexColors: true,
-    transparent:  true,
-    opacity:      0.75,
+    size:            0.04,
+    vertexColors:    true,
+    transparent:     true,
+    opacity:         0.85,
     sizeAttenuation: true,
   });
 
@@ -650,8 +652,8 @@ function initHeroCanvas() {
   // ── Mouse parallax ────────────────────────────────────────────────────────
   let targetX = 0, targetY = 0, currentX = 0, currentY = 0;
   document.addEventListener('mousemove', e => {
-    targetX = (e.clientX / window.innerWidth  - 0.5) * 0.8;
-    targetY = (e.clientY / window.innerHeight - 0.5) * 0.8;
+    targetX = (e.clientX / window.innerWidth  - 0.5) * 0.6;
+    targetY = (e.clientY / window.innerHeight - 0.5) * 0.6;
   });
 
   // ── Resize ────────────────────────────────────────────────────────────────
@@ -668,16 +670,20 @@ function initHeroCanvas() {
   resize();
 
   // ── Animation loop ────────────────────────────────────────────────────────
+  let t = 0;
   const animate = () => {
     requestAnimationFrame(animate);
+    t += 0.0008;
 
-    // Slow auto-rotation
-    points.rotation.y += 0.0012;
-    points.rotation.x += 0.0004;
+    // Organic slow rotation — like a creature drifting
+    points.rotation.y += 0.0010;
+    points.rotation.x += 0.0003;
+    // Subtle breathe — field expands and contracts
+    const breathe = 1 + Math.sin(t) * 0.015;
+    points.scale.set(breathe, breathe, breathe);
 
-    // Mouse parallax (lerp)
-    currentX += (targetX - currentX) * 0.04;
-    currentY += (targetY - currentY) * 0.04;
+    currentX += (targetX - currentX) * 0.035;
+    currentY += (targetY - currentY) * 0.035;
     camera.position.x = currentX;
     camera.position.y = -currentY;
     camera.lookAt(scene.position);
@@ -689,12 +695,7 @@ function initHeroCanvas() {
 }
 
 
-/* ─── PARALLAX DEPTH LAYERS ──────────────────────────────────────────────────
-   Elements with data-depth="0.2" shift at 20% of scroll speed (parallax)
-   Used on hero section items for depth illusion.
-   To add parallax to any element: add data-depth="0.0 to 1.0"
-   To disable: remove data-depth attributes
-─────────────────────────────────────────────────────────────────────────── */
+/* ─── PARALLAX DEPTH LAYERS ──────────────────────────────────────────────── */
 function initParallaxLayers() {
   const els = document.querySelectorAll('[data-depth]');
   if (!els.length) return;
@@ -712,10 +713,7 @@ function initParallaxLayers() {
 }
 
 
-/* ─── EDUCATION TIMELINE DRAW ────────────────────────────────────────────────
-   Animates the vertical centre-line fill and activates dots on scroll.
-   Requires: .edu-line-fill div and .edu-item elements in #education section
-─────────────────────────────────────────────────────────────────────────── */
+/* ─── EDUCATION TIMELINE DRAW ─────────────────────────────────────────────── */
 function initEducationTimeline() {
   const section  = document.getElementById('education');
   const lineFill = document.querySelector('.edu-line-fill');
@@ -725,11 +723,10 @@ function initEducationTimeline() {
   const update = () => {
     const rect   = section.getBoundingClientRect();
     const totalH = section.offsetHeight;
-    const scroll = -rect.top; // how far scrolled into the section
+    const scroll = -rect.top;
     const pct    = Math.max(0, Math.min(scroll / (totalH * 0.9), 1));
     lineFill.style.height = (pct * 100) + '%';
 
-    // Activate dots as their card enters viewport
     items.forEach(item => {
       const ir = item.getBoundingClientRect();
       if (ir.top < window.innerHeight * 0.75) {
@@ -743,9 +740,7 @@ function initEducationTimeline() {
 }
 
 
-/* ─── HEX SKILL BACK FACE FILL ───────────────────────────────────────────────
-   Triggers the level bar fill on .hex-cell back face when entering viewport
-─────────────────────────────────────────────────────────────────────────── */
+/* ─── HEX SKILL BACK FACE FILL ───────────────────────────────────────────── */
 function initHexSkills() {
   if (typeof ScrollTrigger === 'undefined') return;
 
@@ -762,11 +757,7 @@ function initHexSkills() {
 }
 
 
-/* ─── WIRE ALL NEW INITS ─────────────────────────────────────────────────────
-   Call all new functions after GSAP is ready.
-   This function is called at the END of initAnimations() inside the
-   DOMContentLoaded block above (patched in by adding initAll() call).
-─────────────────────────────────────────────────────────────────────────── */
+/* ─── WIRE ALL NEW INITS ──────────────────────────────────────────────────── */
 function initAll() {
   initLenis();
   initMagneticButtons();
@@ -779,10 +770,7 @@ function initAll() {
   initEducationTimeline();
   initHexSkills();
 
-  // Ambient orbs — init each canvas found on this page
   document.querySelectorAll('.ambient-canvas').forEach(c => initAmbientCanvas(c));
 
-  // Hero Three.js canvas (main page only)
   initHeroCanvas();
 }
-
