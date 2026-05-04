@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Environment & Ops — Ishtiyaq Ahmad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100;0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,700&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<style>
+/* ==========================================================================
+   🎨 THEME & VARIABLES
+   ========================================================================== */
+:root {
+  --cream:   #e2e8f0; /* Slightly slate-tinted white */
+  --ink:     #0d1112; /* Deep slate/cyan black */
+  --ink2:    #131a1c; /* Lighter slate panel background */
+  --accent-primary: #10b981; /* Terminal Emerald Green */
+  --accent-secondary: #06b6d4; /* Cyan */
+  --dim:     #64748b;
+  --dim-light: rgba(226, 232, 240, 0.55);
+  --rule:    rgba(16, 185, 129, 0.12); /* Green-tinted borders */
+  --rule-bright: rgba(16, 185, 129, 0.25);
+  --alert-red: #ef4444;
+  --alert-yellow: #f59e0b;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--ink);
+  color: var(--cream);
+  font-family: 'DM Mono', monospace;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ─── NOISE & BACKGROUND ─── */
+body::before {
+  content:''; position:fixed; inset:0; z-index:9000; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:.03;
+  mix-blend-mode: overlay;
+}
+.bg-grid {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image: 
+    linear-gradient(rgba(16,185,129,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16,185,129,0.03) 1px, transparent 1px);
+  background-size: 30px 30px; /* Tighter grid for "terminal" feel */
+  background-position: center top;
+  mask-image: radial-gradient(ellipse at center, black 10%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 10%, transparent 85%);
+}
+
+/* ─── CUSTOM CURSOR ─── */
+#cur {
+  position: fixed; z-index: 9999; pointer-events: none;
+  width: 8px; height: 8px; background: var(--accent-primary);
+  border-radius: 0; /* Square cursor for terminal vibe */
+  transform: translate(-50%,-50%);
+  transition: width .2s, height .2s, border-radius .2s, background .2s;
+}
+#cur-ring {
+  position: fixed; z-index: 9998; pointer-events: none;
+  width: 40px; height: 40px; border: 1px solid var(--accent-primary);
+  border-radius: 0; transform: translate(-50%,-50%);
+  transition: all .3s cubic-bezier(.16,1,.3,1);
+}
+body.hovering #cur { width: 30px; height: 30px; mix-blend-mode: difference; background: var(--cream); border-radius: 50%; }
+body.hovering #cur-ring { width: 60px; height: 60px; border-style: dashed; opacity: 0.3; border-radius: 50%; border-color: var(--cream); animation: spin 4s linear infinite;}
+@keyframes spin { 100% { transform: translate(-50%,-50%) rotate(360deg); } }
+
+/* ─── NAVIGATION ─── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 2rem 4rem; display: flex; justify-content: space-between; align-items: center;
+  background: linear-gradient(to bottom, rgba(13,17,18,0.95), transparent);
+  backdrop-filter: blur(8px);
+}
+.back-link {
+  font-family: 'DM Mono', monospace; font-size: .65rem; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--accent-primary); text-decoration: none; display: flex; align-items: center; gap: .75rem;
+  transition: color .3s, transform .3s;
+}
+.back-link:hover { color: var(--cream); transform: translateX(-5px); }
+.back-link::before { content: ''; width: 24px; height: 1px; background: currentColor; transition: width .3s; }
+.back-link:hover::before { width: 36px; }
+
+.sys-status {
+  font-size: .55rem; letter-spacing: .25em; text-transform: uppercase; color: var(--accent-secondary); display: flex; align-items: center; gap: .5rem;
+}
+.sys-status::before {
+  content:''; width: 6px; height: 6px; background: var(--accent-secondary); animation: blink 1.5s step-end infinite;
+}
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+
+/* ─── LAYOUT ─── */
+.container {
+  display: grid; grid-template-columns: 2.5fr 7.5fr; min-height: 100vh;
+  padding: 8rem 4rem 4rem; max-width: 1700px; margin: 0 auto; gap: 8rem;
+}
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  position: sticky; top: 8rem; height: fit-content;
+  border-left: 1px solid var(--rule); padding-left: 2.5rem;
+}
+.eyebrow {
+  font-family: 'Syne', sans-serif; font-size: .65rem; font-weight: 700; letter-spacing: .3em;
+  color: var(--accent-secondary); text-transform: uppercase; margin-bottom: 1.5rem;
+}
+.page-title {
+  font-family: 'Fraunces', serif; font-size: clamp(3rem, 5vw, 4.5rem); font-weight: 900; line-height: .9; letter-spacing: -.03em;
+  color: var(--cream); margin-bottom: 2.5rem;
+}
+.page-title em { font-style: italic; color: var(--accent-primary); }
+.sidebar-desc {
+  font-size:.75rem; line-height: 1.9; color: var(--dim-light); max-width: 320px;
+}
+.index-list {
+  list-style: none; display: flex; flex-direction: column; gap: 1.2rem; margin-top: 4rem;
+}
+.index-list a {
+  font-size: .7rem; letter-spacing: .15em; text-transform: uppercase; color: var(--dim); text-decoration: none;
+  display: flex; align-items: center; gap: 1rem; transition: all .3s;
+}
+.index-list a::before { content: '0'+counter(idx); counter-increment: idx; font-size: .55rem; color: var(--rule-bright); font-weight: bold; }
+.index-list { counter-reset: idx; }
+.index-list a:hover, .index-list a.active { color: var(--accent-primary); transform: translateX(10px); }
+.index-list a:hover::before, .index-list a.active::before { color: var(--accent-primary); }
+
+/* ─── CONTENT AREA ─── */
+.content-area { display: flex; flex-direction: column; gap: 10rem; padding-bottom: 10rem; }
+.module { position: relative; }
+.module::before {
+  content: ''; position: absolute; top: -3rem; left: 0; width: 100%; height: 1px;
+  background: linear-gradient(90deg, var(--rule-bright) 0%, transparent 100%);
+}
+
+.mod-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3.5rem; }
+.mod-num {
+  font-family: 'Fraunces', serif; font-size: 5rem; font-weight: 900; line-height: .8;
+  color: transparent; -webkit-text-stroke: 1px var(--rule-bright); user-select: none;
+}
+.mod-title { font-family: 'Fraunces', serif; font-size: 2.8rem; font-weight: 700; letter-spacing: -.02em; color: var(--cream); margin-bottom: 0.5rem;}
+.mod-subtitle { font-family: 'Syne', sans-serif; font-size: .9rem; font-weight: 700; letter-spacing: .1em; color: var(--accent-primary); text-transform: uppercase;}
+
+.mod-body { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; }
+.mod-text { font-size: .85rem; line-height: 2.2; color: var(--dim-light); }
+.mod-text p { margin-bottom: 1.5rem; }
+.mod-text strong { color: var(--cream); font-weight: 500; }
+.mod-text ul { margin-left: 1.5rem; margin-bottom: 1.5rem; list-style-type: square; color: var(--accent-secondary); }
+.mod-text li { margin-bottom: .5rem; }
+.mod-text li span { color: var(--dim-light); }
+
+/* ─── DATA PANELS (VISUALS) ─── */
+.data-panel {
+  background: var(--ink2); border: 1px solid var(--rule); padding: 2rem;
+  display: flex; flex-direction: column; gap: 1.5rem; position: relative; overflow: hidden;
+}
+.dp-header {
+  font-size: .6rem; letter-spacing: .25em; text-transform: uppercase; color: var(--dim);
+  border-bottom: 1px dashed var(--rule); padding-bottom: 1rem; display: flex; justify-content: space-between;
+}
+
+/* OS Neofetch Vis */
+.vis-os { display: flex; gap: 1.5rem; font-family: 'DM Mono', monospace; font-size: .65rem; line-height: 1.5; color: var(--dim-light); }
+.os-logo { color: var(--accent-secondary); white-space: pre; font-weight: bold; line-height: 1.2; }
+.os-info { display: flex; flex-direction: column; gap: .25rem; }
+.os-info .lbl { color: var(--accent-primary); font-weight: bold; margin-right: .5rem; }
+
+/* Zsh Prompt Vis */
+.vis-prompt { background: #080a0b; padding: 1.5rem; border-radius: 4px; font-size: .75rem; border: 1px solid var(--rule); }
+.p-line { margin-bottom: .5rem; display: flex; align-items: center; gap: .4rem; }
+.p-dir { background: var(--accent-secondary); color: var(--ink); padding: 2px 8px; font-weight: bold; clip-path: polygon(0 0, 95% 0, 100% 50%, 95% 100%, 0 100%); }
+.p-git { background: #3b82f6; color: white; padding: 2px 8px; clip-path: polygon(0 0, 95% 0, 100% 50%, 95% 100%, 0 100%); }
+.p-git-dirty { color: var(--alert-yellow); font-weight: bold; }
+.p-cmd { color: var(--cream); margin-left: .5rem; }
+.p-cursor { display: inline-block; width: 6px; height: 12px; background: var(--accent-primary); animation: blink 1s step-end infinite; }
+
+/* Git Graph Vis */
+.vis-git { height: 160px; position: relative; border-left: 2px solid var(--rule); margin-left: 1rem; padding-top: 1rem; }
+.commit { position: relative; margin-bottom: 2rem; padding-left: 2rem; }
+.commit::before { content: ''; position: absolute; left: -6px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--ink2); border: 2px solid var(--dim); }
+.commit.head::before { border-color: var(--accent-secondary); background: var(--accent-secondary); box-shadow: 0 0 10px var(--accent-secondary); }
+.commit.branch::before { border-color: var(--accent-primary); }
+.c-hash { color: var(--alert-yellow); font-size: .65rem; margin-right: .5rem; }
+.c-msg { color: var(--cream); font-size: .75rem; }
+.branch-line { position: absolute; left: -1px; top: 40px; bottom: 20px; width: 20px; border-left: 2px solid var(--accent-primary); border-bottom: 2px solid var(--accent-primary); border-bottom-left-radius: 10px; }
+
+/* Linguistics Vis */
+.vis-lang { display: flex; flex-direction: column; gap: 1rem; }
+.lang-row { display: grid; grid-template-columns: 100px 1fr; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--rule); }
+.lang-name { font-size: .6rem; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); }
+.lang-script { font-family: 'Syne', sans-serif; font-size: 1.2rem; color: var(--cream); }
+.lang-script.urdu { font-family: 'Times New Roman', serif; font-size: 1.6rem; direction: rtl; text-align: right; color: var(--accent-secondary); }
+
+/* Mandarin Vis */
+.vis-mandarin { display: flex; align-items: center; justify-content: center; gap: 3rem; height: 150px; }
+.hanzi { font-family: 'Times New Roman', serif; font-size: 4.5rem; color: var(--cream); text-shadow: 0 0 20px rgba(16,185,129,0.2); }
+.pinyin { display: flex; flex-direction: column; align-items: flex-start; }
+.py-text { font-size: 1.5rem; font-weight: 700; color: var(--accent-primary); letter-spacing: .1em; }
+.py-tone { display: flex; gap: 4px; margin-top: .5rem; }
+.tone-line { width: 30px; height: 2px; background: var(--dim); position: relative; }
+.tone-line.t4 { background: var(--accent-secondary); transform: rotate(15deg); transform-origin: left; }
+
+/* Specs Grid (within data panel) */
+.specs-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--rule); border: 1px solid var(--rule);
+}
+.spec-box { background: var(--ink2); padding: 1.5rem 1rem; }
+.sb-label { font-size: .55rem; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); margin-bottom: .5rem; }
+.sb-value { font-family: 'Syne', sans-serif; font-size: .9rem; font-weight: 700; color: var(--cream); line-height: 1.3; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 1200px) {
+  .mod-body { grid-template-columns: 1fr; }
+  .container { grid-template-columns: 3fr 7fr; }
+}
+@media (max-width: 960px) {
+  .container { grid-template-columns: 1fr; gap: 4rem; padding: 6rem 2rem 2rem; }
+  .sidebar { position: relative; top: 0; border-left: none; padding-left: 0; border-bottom: 1px solid var(--rule); padding-bottom: 2rem; }
+  .index-list { flex-direction: row; flex-wrap: wrap; gap: 1.5rem; }
+  .mod-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  nav { padding: 1.5rem 2rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Custom Cursor -->
+<div id="cur"></div>
+<div id="cur-ring"></div>
+
+<!-- Background Elements -->
+<div class="bg-grid"></div>
+
+<!-- Navigation -->
+<nav>
+  <a href="main.html" class="back-link">Return to Main OS</a>
+  <div class="sys-status">Root Access Granted</div>
+</nav>
+
+<div class="container">
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar reveal-l">
+    <div class="eyebrow">// Stack Protocol: 002.C</div>
+    <h1 class="page-title">Env<br><em>&</em> Ops</h1>
+    <p class="sidebar-desc">
+      The architecture of workflow and human communication. From hyper-optimized Linux environments and strict version control to the structural parsing of multiple human languages.
+    </p>
+
+    <ul class="index-list">
+      <li><a href="#linux">Kubuntu Linux OS</a></li>
+      <li><a href="#shell">Zsh & P10k Shell</a></li>
+      <li><a href="#git">CLI-First Git Flow</a></li>
+      <li><a href="#linguistics">Cognitive Linguistics</a></li>
+      <li><a href="#mandarin">Mandarin (HSK)</a></li>
+    </ul>
+  </aside>
+
+  <!-- RIGHT CONTENT -->
+  <main class="content-area">
+
+    <!-- 01: LINUX -->
+    <article id="linux" class="module reveal">
+      <div class="mod-header">
+        <div>
+          <h2 class="mod-title">Kubuntu Linux</h2>
+          <div class="mod-subtitle">The Unrestricted Operating System</div>
+        </div>
+        <div class="mod-num">01</div>
+      </div>
+      <div class="mod-body">
+        <div class="mod-text">
+          <p>An operating system shouldn't be a walled garden; it should be a malleable toolchain. My daily driver is <strong>Kubuntu</strong> (Ubuntu base with the KDE Plasma desktop environment).</p>
+          <p>Windows and macOS hide system telemetry and restrict low-level hardware access. Linux provides complete visibility. I utilize <strong>KDE Plasma</strong> because it offers granular customization—allowing me to strip away bloat, implement strict tiling window manager (TWM) scripts, and bind critical engineering workflows directly to keyboard shortcuts.</p>
+          <ul>
+            <li><span><strong>System Level:</strong> Direct access to `/dev` for hardware serial sniffing and custom driver compilation.</span></li>
+            <li><span><strong>Resource Efficiency:</strong> Idle RAM sits below 1.2GB, leaving maximum computational overhead for CAD simulations and local Docker containers.</span></li>
+          </ul>
+        </div>
+        
+        <div class="data-panel">
+          <div class="dp-header"><span>$ fastfetch --logo kubuntu</span><span>uptime: 4d 12h</span></div>
+          <div class="vis-os">
+            <div class="os-logo">
+      .`
+    .o+`
+   `ooo/
+  `+oooo:
+ `+oooooo:
+-+oooooo+:
+  `/:-:/-
+            </div>
+            <div class="os-info">
+              <div><span class="lbl">OS:</span>Kubuntu 24.04 LTS x86_64</div>
+              <div><span class="lbl">Kernel:</span>6.8.0-generic</div>
+              <div><span class="lbl">WM:</span>KWin (Plasma 6)</div>
+              <div><span class="lbl">Packages:</span>2104 (dpkg), 12 (flatpak)</div>
+              <div><span class="lbl">Terminal:</span>Konsole</div>
+              <div><span class="lbl">Memory:</span>1124MiB / 15890MiB</div>
+            </div>
+          </div>
+          <div class="specs-grid" style="margin-top: 1rem;">
+            <div class="spec-box"><div class="sb-label">Daily Driver</div><div class="sb-value">Linux (Debian-based)</div></div>
+            <div class="spec-box"><div class="sb-label">Desktop Env</div><div class="sb-value">KDE Plasma 6</div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 02: ZSH -->
+    <article id="shell" class="module reveal">
+      <div class="mod-header">
+        <div>
+          <h2 class="mod-title">Zsh & Powerlevel10k</h2>
+          <div class="mod-subtitle">Zero-Latency Command Line</div>
+        </div>
+        <div class="mod-num">02</div>
+      </div>
+      <div class="mod-body">
+        <div class="mod-text">
+          <p>The GUI is a bottleneck. I operate entirely within the terminal using <strong>Zsh (Z Shell)</strong> heavily customized with the <strong>Powerlevel10k</strong> theme and rapid-response plugins.</p>
+          <p>My `.zshrc` is a curated list of aliases and functions designed to reduce repetitive keystrokes. I utilize <code>zsh-autosuggestions</code> (based on history) and <code>zsh-syntax-highlighting</code> to catch syntax errors before execution.</p>
+          <p>The Powerlevel10k prompt provides instantaneous visual feedback: current Git branch status, untracked file counts, virtual environment status, and command execution time, ensuring I never have to manually query system state.</p>
+        </div>
+        
+        <div class="data-panel">
+          <div class="dp-header"><span>~/.zshrc / P10K Render</span><span>Font: MesloLGS NF</span></div>
+          <div class="vis-prompt">
+            <div class="p-line">
+              <span class="p-dir">~/dev/mechatronics-core</span>
+              <span class="p-git"> feature/pid-tuning <span class="p-git-dirty">!1 ?2</span></span>
+              <span style="color:var(--dim); font-size:.65rem; margin-left:auto;">24ms</span>
+            </div>
+            <div class="p-line" style="margin-top: .75rem;">
+              <span style="color:var(--accent-primary); font-weight:bold;">❯</span>
+              <span class="p-cmd">make flash TARGET=tm4c123g</span><span class="p-cursor"></span>
+            </div>
+          </div>
+          <div class="specs-grid" style="margin-top: 1rem;">
+            <div class="spec-box"><div class="sb-label">Shell Engine</div><div class="sb-value">Z Shell (Zsh)</div></div>
+            <div class="spec-box"><div class="sb-label">Prompt Engine</div><div class="sb-value">Powerlevel10k</div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 03: GIT -->
+    <article id="git" class="module reveal">
+      <div class="mod-header">
+        <div>
+          <h2 class="mod-title">CLI-First Git Flow</h2>
+          <div class="mod-subtitle">Architectural Version Control</div>
+        </div>
+        <div class="mod-num">03</div>
+      </div>
+      <div class="mod-body">
+        <div class="mod-text">
+          <p>Version control is not just a backup system; it is the architectural blueprint of a project's evolution. I use a strict <strong>CLI-first Git workflow</strong>—no bloated GUI clients, just raw commands for maximum control.</p>
+          <p>I maintain clean, linear project histories. Instead of messy merge commits, I enforce <strong>interactive rebasing</strong> (<code>git rebase -i</code>) to squash trivial commits and reword logs before pushing to upstream repositories.</p>
+          <p>Every commit is atomic: doing one thing and documenting it clearly. I utilize Git hooks to automate pre-commit code linting and structural checks before hardware builds are triggered.</p>
+        </div>
+        
+        <div class="data-panel">
+          <div class="dp-header"><span>Git Log / Graph</span><span>HEAD -> main</span></div>
+          <div class="vis-git">
+            <div class="commit head">
+              <span class="c-hash">a9b4f21</span> <span class="c-msg">feat(core): implement Kalman filter for IMU</span>
+            </div>
+            <div class="commit branch" style="margin-left: 20px;">
+              <div class="branch-line"></div>
+              <span class="c-hash">c4e1d9a</span> <span class="c-msg">fix(sensor): resolve I2C buffer overflow</span>
+            </div>
+            <div class="commit">
+              <span class="c-hash">8f3b20c</span> <span class="c-msg">refactor(math): optimize matrix multiplication</span>
+            </div>
+          </div>
+          <div class="specs-grid" style="margin-top: 1rem;">
+            <div class="spec-box"><div class="sb-label">Merge Strategy</div><div class="sb-value">Rebase & Squash</div></div>
+            <div class="spec-box"><div class="sb-label">Commit Style</div><div class="sb-value">Conventional Commits</div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 04: LINGUISTICS -->
+    <article id="linguistics" class="module reveal">
+      <div class="mod-header">
+        <div>
+          <h2 class="mod-title">Cognitive Linguistics</h2>
+          <div class="mod-subtitle">Parsing Human Frameworks</div>
+        </div>
+        <div class="mod-num">04</div>
+      </div>
+      <div class="mod-body">
+        <div class="mod-text">
+          <p>I approach human languages exactly how I approach programming languages: as distinct syntactic frameworks for processing data. I am fluent in <strong>English, Urdu, and Burushaski</strong>.</p>
+          <p><strong>Burushaski</strong> is particularly fascinating. As a language isolate spoken in Gilgit-Baltistan, it has no known linguistic relatives globally. It operates on a highly complex ergative-absolutive alignment and an intricate noun class system. Growing up with this as a mother tongue forged an early capability to parse extremely unconventional data structures.</p>
+          <p>Navigating between the Latin script (English), the right-to-left Perso-Arabic script (Urdu), and the unwritten acoustic structures of Burushaski allows for rapid cognitive context switching.</p>
+        </div>
+        
+        <div class="data-panel">
+          <div class="dp-header"><span>Syntactic Mapping</span><span>Concept: "System Initialization"</span></div>
+          <div class="vis-lang">
+            <div class="lang-row">
+              <span class="lang-name">English</span>
+              <span class="lang-script">The system is ready.</span>
+            </div>
+            <div class="lang-row">
+              <span class="lang-name">Urdu</span>
+              <span class="lang-script urdu">نظام تیار ہے۔</span>
+            </div>
+            <div class="lang-row" style="border-bottom:none;">
+              <span class="lang-name">Burushaski</span>
+              <span class="lang-script">Nizam taiyar b-i.</span>
+            </div>
+          </div>
+          <div class="specs-grid" style="margin-top: 1rem;">
+            <div class="spec-box"><div class="sb-label">Fluency Base</div><div class="sb-value">Trilingual + Isolate</div></div>
+            <div class="spec-box"><div class="sb-label">Cognitive Load</div><div class="sb-value">High Context Switching</div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 05: MANDARIN -->
+    <article id="mandarin" class="module reveal">
+      <div class="mod-header">
+        <div>
+          <h2 class="mod-title">Mandarin Chinese (HSK)</h2>
+          <div class="mod-subtitle">Algorithmic Language Acquisition</div>
+        </div>
+        <div class="mod-num">05</div>
+      </div>
+      <div class="mod-body">
+        <div class="mod-text">
+          <p>I am currently engineering my acquisition of <strong>Mandarin Chinese</strong>. Rather than traditional passive learning, I treat the language as a database of visual arrays (Hanzi) and acoustic frequencies (Pinyin tones).</p>
+          <p>I utilize <strong>Spaced Repetition Systems (Anki)</strong> with custom-coded card templates to algorithmically force character retention into long-term memory. Recognizing radicals within characters is akin to understanding root functions in software engineering.</p>
+          <p>Given the global dominance of Chinese manufacturing in the hardware and PCB space (Shenzhen/JLCPCB), acquiring Mandarin directly bypasses translation bottlenecks when reading native datasheets and negotiating hardware fabrication specs.</p>
+        </div>
+        
+        <div class="data-panel">
+          <div class="dp-header"><span>Hanzi / Pinyin Analysis</span><span>Target: Hardware / Machine</span></div>
+          <div class="vis-mandarin">
+            <div class="hanzi">机</div>
+            <div class="pinyin">
+              <span class="py-text">jī</span>
+              <div class="py-tone">
+                <!-- Flat Tone (1st tone) -->
+                <div class="tone-line" style="background: var(--accent-primary);"></div> 
+              </div>
+              <span style="font-size: .65rem; color: var(--dim); margin-top: .5rem; text-transform: uppercase;">Meaning: Machine / Engine</span>
+            </div>
+          </div>
+          <div class="specs-grid" style="margin-top: 1rem;">
+            <div class="spec-box"><div class="sb-label">Current Status</div><div class="sb-value">HSK Integration</div></div>
+            <div class="spec-box"><div class="sb-label">Memorization</div><div class="sb-value">Spaced Repetition (SRS)</div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+  </main>
+</div>
+
+<script>
+// ─── CURSOR LOGIC ─────────────────────────────────
+const cur = document.getElementById('cur');
+const curRing = document.getElementById('cur-ring');
+let mx=0, my=0, rx=0, ry=0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cur.style.left = mx + 'px'; 
+  cur.style.top = my + 'px';
+});
+
+(function animRing(){
+  rx += (mx - rx) * 0.15; 
+  ry += (my - ry) * 0.15;
+  curRing.style.left = rx + 'px'; 
+  curRing.style.top = ry + 'px';
+  requestAnimationFrame(animRing);
+})();
+
+// Hover interactions
+document.querySelectorAll('a, .data-panel').forEach(el => {
+  el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+  el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+});
+
+// ─── GSAP ANIMATIONS ──────────────────────────────
+gsap.registerPlugin(ScrollTrigger);
+
+// Sidebar entrance
+gsap.fromTo('.reveal-l', 
+  { opacity: 0, x: -40 },
+  { opacity: 1, x: 0, duration: 1.2, ease: 'power3.out', delay: 0.2 }
+);
+
+// Module reveals
+gsap.utils.toArray('.reveal').forEach((el) => {
+  gsap.fromTo(el,
+    { opacity: 0, y: 50 },
+    { 
+      opacity: 1, y: 0, 
+      duration: 1.2, 
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: el,
+        start: 'top 80%',
+        once: true
+      }
+    }
+  );
+});
+
+// Staggered animation for data panels on scroll
+gsap.utils.toArray('.data-panel').forEach((panel) => {
+  gsap.fromTo(panel,
+    { opacity: 0, scale: 0.95, filter: "blur(4px)" },
+    { 
+      opacity: 1, scale: 1, filter: "blur(0px)",
+      duration: 1, 
+      ease: 'power2.out',
+      scrollTrigger: {
+        trigger: panel,
+        start: 'top 85%',
+        once: true
+      }
+    }
+  );
+});
+
+// Scroll Spy for Index List
+const sections = document.querySelectorAll('.module');
+const navLinks = document.querySelectorAll('.index-list a');
+
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(section => {
+    const sectionTop = section.offsetTop;
+    if (pageYOffset >= (sectionTop - 350)) {
+      current = section.getAttribute('id');
+    }
+  });
+
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href').includes(current)) {
+      link.classList.add('active');
+    }
+  });
+});
+</script>
+</body>
+</html>

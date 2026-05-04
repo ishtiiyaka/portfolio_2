@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code & Software — Ishtiyaq Ahmad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100;0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,700&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<style>
+/* ==========================================================================
+   🎨 THEME & VARIABLES
+   ========================================================================== */
+:root {
+  --cream:   #f2ede4;
+  --cream2:  #e8e1d4;
+  --ink:     #0f0e0c;
+  --ink2:    #15161a; /* Slightly bluer dark for software vs hardware */
+  --copper:  #b5651d;
+  --copper2: #d4843a;
+  --blue:    #1a3a6e;
+  --blue2:   #4a72b8; /* Brighter accent blue for software */
+  --dim:     #7a7268;
+  --dim-light: rgba(242,237,228,0.5);
+  --rule:    rgba(242,237,228,0.08);
+  --rule-bright: rgba(242,237,228,0.15);
+  --accent-green: #4ade80;
+  --accent-red: #f87171;
+  --code-pink: #ec4899;
+  --code-yellow: #facc15;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--ink);
+  color: var(--cream);
+  font-family: 'DM Mono', monospace;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ─── NOISE & GRID BACKGROUNDS ─── */
+body::before {
+  content:''; position:fixed; inset:0; z-index:9000; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:.04;
+  mix-blend-mode: overlay;
+}
+.bg-grid {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image: 
+    linear-gradient(var(--rule) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+  background-size: 80px 80px; /* Slightly larger grid for software */
+  background-position: center top;
+  mask-image: radial-gradient(ellipse at center, black 10%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 10%, transparent 85%);
+}
+
+/* ─── CUSTOM CURSOR ─── */
+#cur {
+  position: fixed; z-index: 9999; pointer-events: none;
+  width: 8px; height: 8px; background: var(--blue2); /* Blue cursor for software */
+  border-radius: 50%; transform: translate(-50%,-50%);
+  transition: width .2s, height .2s, border-radius .2s, background .2s;
+}
+#cur-ring {
+  position: fixed; z-index: 9998; pointer-events: none;
+  width: 40px; height: 40px; border: 1px dashed var(--blue2);
+  border-radius: 50%; transform: translate(-50%,-50%);
+  transition: all .4s cubic-bezier(.16,1,.3,1);
+  animation: spin 10s linear infinite;
+}
+@keyframes spin { 100% { transform: translate(-50%,-50%) rotate(360deg); } }
+body.hovering #cur { width: 40px; height: 40px; mix-blend-mode: difference; background: var(--cream); }
+body.hovering #cur-ring { width: 70px; height: 70px; border-style: solid; opacity: 0.15; border-color: var(--cream); }
+
+/* ─── NAVIGATION ─── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 2rem 4rem; display: flex; justify-content: space-between; align-items: center;
+  background: linear-gradient(to bottom, rgba(15,14,12,0.95), transparent);
+  backdrop-filter: blur(8px);
+}
+.back-link {
+  font-family: 'DM Mono', monospace; font-size: .65rem; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--blue2); text-decoration: none; display: flex; align-items: center; gap: .75rem;
+  transition: color .3s, transform .3s;
+}
+.back-link:hover { color: var(--cream); transform: translateX(-5px); }
+.back-link::before { content: ''; width: 24px; height: 1px; background: currentColor; transition: width .3s; }
+.back-link:hover::before { width: 36px; }
+
+.sys-status {
+  font-size: .55rem; letter-spacing: .25em; text-transform: uppercase; color: var(--accent-green); display: flex; align-items: center; gap: .5rem;
+}
+.sys-status::before {
+  content:''; width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%; animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+/* ─── LAYOUT ─── */
+.container {
+  display: grid; grid-template-columns: 2.5fr 7.5fr; min-height: 100vh;
+  padding: 8rem 4rem 4rem; max-width: 1700px; margin: 0 auto; gap: 8rem;
+}
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  position: sticky; top: 8rem; height: fit-content;
+  border-left: 1px solid var(--rule); padding-left: 2.5rem;
+}
+.eyebrow {
+  font-family: 'Syne', sans-serif; font-size: .65rem; font-weight: 700; letter-spacing: .3em;
+  color: var(--dim-light); text-transform: uppercase; margin-bottom: 1.5rem;
+}
+.page-title {
+  font-family: 'Fraunces', serif; font-size: clamp(3rem, 5vw, 5rem); font-weight: 900; line-height: .9; letter-spacing: -.03em;
+  color: var(--cream); margin-bottom: 2.5rem;
+}
+.page-title em { font-style: italic; color: var(--blue2); }
+.sidebar-desc {
+  font-size:.75rem; line-height: 1.9; color: var(--dim-light); max-width: 320px;
+}
+.index-list {
+  list-style: none; display: flex; flex-direction: column; gap: 1.2rem; margin-top: 4rem;
+}
+.index-list a {
+  font-size: .7rem; letter-spacing: .15em; text-transform: uppercase; color: var(--dim); text-decoration: none;
+  display: flex; align-items: center; gap: 1rem; transition: all .3s;
+}
+.index-list a::before { content: '0'+counter(idx); counter-increment: idx; font-size: .55rem; color: var(--rule-bright); font-weight: bold; }
+.index-list { counter-reset: idx; }
+.index-list a:hover, .index-list a.active { color: var(--blue2); transform: translateX(10px); }
+.index-list a:hover::before, .index-list a.active::before { color: var(--blue2); }
+
+/* ─── CONTENT AREA ─── */
+.content-area { display: flex; flex-direction: column; gap: 10rem; padding-bottom: 10rem; }
+.module { position: relative; }
+.module::before {
+  content: ''; position: absolute; top: -3rem; left: 0; width: 100%; height: 1px;
+  background: linear-gradient(90deg, var(--rule-bright) 0%, transparent 100%);
+}
+
+.mod-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3.5rem; }
+.mod-num {
+  font-family: 'Fraunces', serif; font-size: 5rem; font-weight: 900; line-height: .8;
+  color: transparent; -webkit-text-stroke: 1px var(--rule-bright); user-select: none;
+}
+.mod-title { font-family: 'Fraunces', serif; font-size: 2.8rem; font-weight: 700; letter-spacing: -.02em; color: var(--cream); margin-bottom: 0.5rem;}
+.mod-subtitle { font-family: 'Syne', sans-serif; font-size: .9rem; font-weight: 700; letter-spacing: .1em; color: var(--blue2); text-transform: uppercase;}
+
+.mod-body { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; }
+.mod-text { font-size: .85rem; line-height: 2.2; color: var(--dim-light); }
+.mod-text p { margin-bottom: 1.5rem; }
+.mod-text strong { color: var(--cream); font-weight: 500; }
+.mod-text ul { margin-left: 1.5rem; margin-bottom: 1.5rem; list-style-type: square; color: var(--blue2); }
+.mod-text li { margin-bottom: .5rem; }
+.mod-text li span { color: var(--dim-light); }
+
+/* ─── DATA PANELS (VISUALS) ─── */
+.data-panel {
+  background: var(--ink2); border: 1px solid var(--rule); padding: 2rem;
+  display: flex; flex-direction: column; gap: 1.5rem; position: relative; overflow: hidden;
+}
+.dp-header {
+  font-size: .6rem; letter-spacing: .25em; text-transform: uppercase; color: var(--dim);
+  border-bottom: 1px solid var(--rule); padding-bottom: 1rem; display: flex; justify-content: space-between;
+}
+
+/* Python Terminal Vis */
+.vis-terminal { font-family: 'DM Mono', monospace; font-size: .7rem; color: var(--dim); line-height: 1.6; white-space: pre; background: #0a0a0c; padding: 1rem; border: 1px solid var(--rule); border-radius: 4px; }
+.vis-terminal .kw { color: var(--code-pink); }
+.vis-terminal .func { color: var(--blue2); }
+.vis-terminal .str { color: var(--code-yellow); }
+.vis-terminal .comment { color: var(--dim); font-style: italic; }
+
+/* Control Theory Vis */
+.vis-control { height: 160px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px dashed var(--rule); background: radial-gradient(circle at center, rgba(74,114,184,0.1) 0%, transparent 70%); }
+.vis-control svg { width: 100%; height: 100%; overflow: visible; }
+.axis { stroke: var(--rule-bright); stroke-width: 1; }
+.step-response { fill: none; stroke: var(--blue2); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.target-line { stroke: var(--accent-red); stroke-width: 1; stroke-dasharray: 4,4; }
+
+/* React Tree Vis */
+.vis-tree { display: flex; flex-direction: column; gap: 10px; font-size: .65rem; padding: 1rem 0; }
+.tree-node { border: 1px solid var(--rule-bright); padding: 6px 12px; border-radius: 4px; background: rgba(255,255,255,0.02); display: inline-block; color: var(--cream); }
+.tree-child { margin-left: 20px; border-left: 1px solid var(--rule); padding-left: 15px; display: flex; flex-direction: column; gap: 8px;}
+.comp-name { color: var(--blue2); font-weight: 700; }
+.prop { color: var(--dim); }
+
+/* Data Pipeline Vis */
+.vis-data { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--rule); font-size: .65rem; text-align: center; }
+.vis-data div { background: var(--ink2); padding: 8px 4px; }
+.vis-data .header { background: rgba(74,114,184,0.15); color: var(--blue2); font-weight: bold; }
+.vis-data .null { color: var(--accent-red); font-style: italic; }
+
+/* UI/UX Vis */
+.vis-ui { display: flex; flex-direction: column; gap: 1.5rem; }
+.typo-spec { border-left: 2px solid var(--blue2); padding-left: 1rem; }
+.typo-huge { font-family: 'Fraunces', serif; font-size: 2.5rem; font-weight: 900; line-height: 1; color: var(--cream); }
+.typo-small { font-family: 'DM Mono', monospace; font-size: .6rem; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); margin-top: .5rem; }
+.color-tokens { display: flex; gap: .5rem; }
+.token { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--rule); }
+
+/* Specs Grid (within data panel) */
+.specs-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--rule); border: 1px solid var(--rule);
+}
+.spec-box { background: var(--ink2); padding: 1.5rem 1rem; }
+.sb-label { font-size: .55rem; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); margin-bottom: .5rem; }
+.sb-value { font-family: 'Syne', sans-serif; font-size: .9rem; font-weight: 700; color: var(--cream); line-height: 1.3; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 1200px) {
+  .mod-body { grid-template-columns: 1fr; }
+  .container { grid-template-columns: 3fr 7fr; }
+}
+@media (max-width: 960px) {
+  .container { grid-template-columns: 1fr; gap: 4rem; padding: 6rem 2rem 2rem; }
+  .sidebar { position: relative; top: 0; border-left: none; padding-left: 0; border-bottom: 1px solid var(--rule); padding-bottom: 2rem; }
+  .index-list { flex-direction: row; flex-wrap: wrap; gap: 1.5rem; }
+  .mod-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  nav { padding: 1.5rem 2rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Custom Cursor -->
+<div id="cur"></div>
+<div id="cur-ring"></div>
+
+<!-- Background Elements -->
+<div class="bg-grid"></div>
+
+<!-- Navigation -->
+<nav>
+  <a href="main.html" class="back-link">Return to Main OS</a>
+  <div class="sys-status">Software Module Online</div>
+</nav>
+
+<div class="container">
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar reveal-l">
+    <div class="eyebrow">// Stack Protocol: 002.B</div>
+    <h1 class="page-title">Code<br><em>&</em> Software</h1>
+    <p class="sidebar-desc">
+      Architecting digital ecosystems. From raw data pipelines and headless browser automation to fluid, physics-driven frontend interfaces. Translating machine logic into human experience.
+    </p>
+
+    <ul class="index-list">
+      <li><a href="#automation">Python & Automation</a></li>
+      <li><a href="#control">MATLAB & Control Theory</a></li>
+      <li><a href="#frontend">Frontend Architecture</a></li>
+      <li><a href="#pipelines">Data Pipelines & ETL</a></li>
+      <li><a href="#uiux">Distinctive UI/UX</a></li>
+    </ul>
+  </aside>
+
+  <!-- RIGHT CONTENT -->
+  <main class="content-area">
+
+    <!-- 01: PYTHON AUTOMATION -->
+    <article id="automation" class="module reveal">
+      <div class="mod-header">
+        <div>
+          <h2 class="mod-title">Python Automation</h2>
+          <div class="mod-subtitle">Headless Browsers & Scripting</div>
+        </div>
+        <div class="mod-num">01</div>
+      </div>
+      <div class="mod-body">
+        <div class="mod-text">
+          <p>I eliminate manual repetition through aggressive scripting. Using <strong>Selenium WebDriver</strong> and <strong>BeautifulSoup4</strong>, I build headless scrapers that navigate complex DOM structures, handle dynamic JavaScript rendering, and bypass standard anti-bot protections.</p>
+          <p>My scripts don't just click buttons; they orchestrate tasks. I've designed architectures utilizing Python's <code>concurrent.futures</code> for asynchronous parallel scraping, significantly reducing execution time for large-scale media acquisitions (like batch-downloading gigabytes of audio libraries).</p>
+          <ul>
+            <li><span><strong>DOM Manipulation:</strong> Precise XPath and CSS selector targeting for volatile web layouts.</span></li>
+            <li><span><strong>State Management:</strong> Handling session cookies, custom headers, and proxy rotations to maintain scraping persistence.</span></li>
+            <li><span><strong>File I/O:</strong> Automated OS-level file management, hashing, and automated directory structuring.</span></li>
+          </ul>
+        </div>
+        
+        <div class="data-panel">
+          <div class="dp-header"><span>Scraper.py / Async Event Loop</span><span>Runtime: Python 3.11</span></div>
+          <div class="vis-terminal">
+<span class="kw">import</span> asyncio
+<span class="kw">from</span> bs4 <span class="kw">import</span> BeautifulSoup
+
+<span class="kw">async def</span> <span class="func">extract_payload</span>(url: <span class="func">str</span>):
+    <span class="comment"># Initialize headless context</span>
+    html = <span class="kw">await</span> fetch_dom(url, proxy=<span class="kw">True</span>)
+    soup = BeautifulSoup(html, <span class="str">'lxml'</span>)
+    
+    <span class="kw">try</span>:
+        node = soup.select_one(<span class="str">'.data-matrix > div'</span>)
+        <span class="kw">return</span> node.get(<span class="str">'data-token'</span>)
+    <span class="kw">except</span> <span class="func">AttributeError</span>:
+        <span class="kw">raise</span> DOMStructureException()</div>
+          <div class="specs-grid">
+            <div class="spec-box"><div class="sb-label">Concurrency</div><div class="sb-value">Asyncio / ThreadPool</div></div>
+            <div class="spec-box"><div class="sb-label">Parsing Engine</div><div class="sb-value">lxml (C-optimized)</div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 02: MATLAB -->
+    <article id="control" class="module reveal">
+      <div class="mod-header">
+        <div>
+          <h2 class="mod-title">MATLAB & Simulink</h2>
+          <div class="mod-subtitle">Control Systems Simulation</div>
+        </div>
+        <div class="mod-num">02</div>
+      </div>
+      <div class="mod-body">
+        <div class="mod-text">
+          <p>Before deploying C-code to physical microcontrollers, I mathematically prove system stability using MATLAB and Simulink. I build <strong>State-Space models</strong> and transfer functions that mirror the physical dynamics of DC motors and robotic linkages.</p>
+          <p>I specialize in <strong>PID tuning</strong> via root locus analysis and Bode plots. By simulating step responses with varying disturbance injections, I can perfectly tune a system's settling time, overshoot, and steady-state error digitally.</p>
+          <p>This "Model-Based Design" approach ensures that when the code is finally flashed to the hardware, the robotic arms balance perfectly on the first attempt without destructive oscillations.</p>
+        </div>
+        
+        <div class="data-panel">
+          <div class="dp-header"><span>Simulink / Closed-Loop Step Response</span><span>Scope: Tuned PID</span></div>
+          <div class="vis-control">
+            <svg viewBox="0 0 300 100">
+              <!-- Grid lines -->
+              <line x1="0" y1="80" x2="300" y2="80" class="axis" />
+              <line x1="20" y1="0" x2="20" y2="100" class="axis" />
+              <!-- Target Line -->
+              <line x1="20" y1="30" x2="300" y2="30" class="target-line" />
+              <!-- Step Response Curve (Underdamped -> Settled) -->
+              <path d="M 20 80 Q 40 80, 60 20 T 100 35 T 140 28 T 180 30 L 300 30" class="step-response" />
+            </svg>
+          </div>
+          <div class="specs-grid">
+            <div class="spec-box"><div class="sb-label">Overshoot (Mp)</div><div class="sb-value">&lt; 4.5%</div></div>
+            <div class="spec-box"><div class="sb-label">Settling Time (Ts)</div><div class="sb-value">0.8s (±2%)</div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 03: FRONTEND -->
+    <article id="frontend" class="module reveal">
+      <div class="mod-header">
+        <div>
+          <h2 class="mod-title">React & JS Architecture</h2>
+          <div class="mod-subtitle">Performant, Interactive UIs</div>
+        </div>
+        <div class="mod-num">03</div>
+      </div>
+      <div class="mod-body">
+        <div class="mod-text">
+          <p>I don't just build websites; I engineer web applications. Utilizing modern <strong>React (Hooks, Context API)</strong> and vanilla JavaScript, I create modular, component-driven architectures that scale cleanly without state-management spaghetti.</p>
+          <p>Performance is paramount. I avoid heavy, generic CSS frameworks in favor of custom, utility-driven CSS or raw styling to minimize payload. This ensures instantaneous load times and 60fps rendering.</p>
+          <p>To breathe life into the DOM, I leverage <strong>GSAP (GreenSock)</strong> for high-performance physics-based animations. I tie complex, staggered timeline reveals directly to scroll triggers, turning static pages into immersive digital experiences that feel physically grounded.</p>
+        </div>
+        
+        <div class="data-panel">
+          <div class="dp-header"><span>Virtual DOM / Component Tree</span><span>Engine: React 18</span></div>
+          <div class="vis-tree">
+            <div class="tree-node"><span class="comp-name">&lt;App /&gt;</span></div>
+            <div class="tree-child">
+              <div class="tree-node"><span class="comp-name">&lt;PhysicsEngine&gt;</span> <span class="prop">friction={0.8}</span></div>
+              <div class="tree-child" style="margin-left: 20px;">
+                <div class="tree-node"><span class="comp-name">&lt;CanvasLayer /&gt;</span> <span class="prop">useGL={true}</span></div>
+                <div class="tree-node"><span class="comp-name">&lt;UIOverlay /&gt;</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="specs-grid" style="margin-top: 1rem;">
+            <div class="spec-box"><div class="sb-label">Animation Core</div><div class="sb-value">GSAP + ScrollTrigger</div></div>
+            <div class="spec-box"><div class="sb-label">State Scope</div><div class="sb-value">Context / Reducers</div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 04: PIPELINES -->
+    <article id="pipelines" class="module reveal">
+      <div class="mod-header">
+        <div>
+          <h2 class="mod-title">Data Pipelines & ETL</h2>
+          <div class="mod-subtitle">Data Structuring & Cleaning</div>
+        </div>
+        <div class="mod-num">04</div>
+      </div>
+      <div class="mod-body">
+        <div class="mod-text">
+          <p>Raw data is useless without structure. I build ETL (Extract, Transform, Load) pipelines to handle chaotic datasets gathered from scraping or hardware telemetry.</p>
+          <p>Using <strong>Pandas and NumPy</strong>, I process arrays of data, applying vectorization rather than slow iterative loops. This allows for the rapid cleaning of datasets: handling missing null values, normalizing erratic sensor floats, and reshaping data matrices.</p>
+          <p>The resulting pristine data is then serialized into structured JSON, CSV, or injected into SQL databases, ready for downstream algorithmic consumption or UI rendering.</p>
+        </div>
+        
+        <div class="data-panel">
+          <div class="dp-header"><span>Pandas DataFrame / stdout</span><span>Rows: 1.2M</span></div>
+          <div class="vis-data">
+            <div class="header">id</div><div class="header">timestamp</div><div class="header">sensor_v</div><div class="header">status</div>
+            <div>0</div><div>171452810</div><div>2.405</div><div>OK</div>
+            <div>1</div><div>171452811</div><div>2.411</div><div>OK</div>
+            <div>2</div><div>171452812</div><div class="null">NaN</div><div>ERR_SIG</div>
+            <div>3</div><div>171452813</div><div>2.398</div><div>OK</div>
+          </div>
+          <div class="specs-grid" style="margin-top: 1rem;">
+            <div class="spec-box"><div class="sb-label">Processing Lib</div><div class="sb-value">Pandas (Vectorized)</div></div>
+            <div class="spec-box"><div class="sb-label">I/O Formatting</div><div class="sb-value">JSON / HDF5</div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 05: UI/UX -->
+    <article id="uiux" class="module reveal">
+      <div class="mod-header">
+        <div>
+          <h2 class="mod-title">Distinctive UI/UX</h2>
+          <div class="mod-subtitle">Brutalist & Anti-Cookie-Cutter Design</div>
+        </div>
+        <div class="mod-num">05</div>
+      </div>
+      <div class="mod-body">
+        <div class="mod-text">
+          <p>I reject generic, AI-generated aesthetics, overused fonts (like Inter or Roboto), and predictable white-and-purple SaaS templates. A portfolio or application should have a distinct, unapologetic character.</p>
+          <p>I practice <strong>Digital Brutalism and Structural Design</strong>. This involves strict grid systems, high-contrast typography (pairing expressive serifs like Fraunces with technical mono-fonts), and the deliberate use of negative space.</p>
+          <p>Every element is customized through CSS variables (Design Tokens). From custom SVG noise overlays to mathematical clamp() functions for fluid typography, I ensure the UI adapts perfectly across viewports without ever losing its intended atmospheric edge.</p>
+        </div>
+        
+        <div class="data-panel">
+          <div class="dp-header"><span>Design Tokens</span><span>Root Variables</span></div>
+          <div class="vis-ui">
+            <div class="typo-spec">
+              <div class="typo-huge">Fraunces</div>
+              <div class="typo-small">Display / 900 Italic / -4% Tracking</div>
+            </div>
+            <div class="color-tokens">
+              <div class="token" style="background: var(--ink);"></div>
+              <div class="token" style="background: var(--ink2);"></div>
+              <div class="token" style="background: var(--blue2);"></div>
+              <div class="token" style="background: var(--cream);"></div>
+              <div class="token" style="background: var(--rule);"></div>
+            </div>
+          </div>
+          <div class="specs-grid" style="margin-top: 1rem;">
+            <div class="spec-box"><div class="sb-label">Scaling Logic</div><div class="sb-value">CSS clamp() Fluid</div></div>
+            <div class="spec-box"><div class="sb-label">System Font</div><div class="sb-value" style="color:var(--accent-red); text-decoration:line-through;">Banned</div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+  </main>
+</div>
+
+<script>
+// ─── CURSOR LOGIC ─────────────────────────────────
+const cur = document.getElementById('cur');
+const curRing = document.getElementById('cur-ring');
+let mx=0, my=0, rx=0, ry=0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cur.style.left = mx + 'px'; 
+  cur.style.top = my + 'px';
+});
+
+(function animRing(){
+  rx += (mx - rx) * 0.15; 
+  ry += (my - ry) * 0.15;
+  curRing.style.left = rx + 'px'; 
+  curRing.style.top = ry + 'px';
+  requestAnimationFrame(animRing);
+})();
+
+// Hover interactions
+document.querySelectorAll('a, .data-panel').forEach(el => {
+  el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+  el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+});
+
+// ─── GSAP ANIMATIONS ──────────────────────────────
+gsap.registerPlugin(ScrollTrigger);
+
+// Sidebar entrance
+gsap.fromTo('.reveal-l', 
+  { opacity: 0, x: -40 },
+  { opacity: 1, x: 0, duration: 1.2, ease: 'power3.out', delay: 0.2 }
+);
+
+// Module reveals
+gsap.utils.toArray('.reveal').forEach((el) => {
+  gsap.fromTo(el,
+    { opacity: 0, y: 50 },
+    { 
+      opacity: 1, y: 0, 
+      duration: 1.2, 
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: el,
+        start: 'top 80%',
+        once: true
+      }
+    }
+  );
+});
+
+// Staggered animation for data panels on scroll
+gsap.utils.toArray('.data-panel').forEach((panel) => {
+  gsap.fromTo(panel,
+    { opacity: 0, scale: 0.95, filter: "blur(4px)" },
+    { 
+      opacity: 1, scale: 1, filter: "blur(0px)",
+      duration: 1, 
+      ease: 'power2.out',
+      scrollTrigger: {
+        trigger: panel,
+        start: 'top 85%',
+        once: true
+      }
+    }
+  );
+});
+
+// Scroll Spy for Index List
+const sections = document.querySelectorAll('.module');
+const navLinks = document.querySelectorAll('.index-list a');
+
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(section => {
+    const sectionTop = section.offsetTop;
+    if (pageYOffset >= (sectionTop - 350)) {
+      current = section.getAttribute('id');
+    }
+  });
+
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href').includes(current)) {
+      link.classList.add('active');
+    }
+  });
+});
+</script>
+</body>
+</html>
