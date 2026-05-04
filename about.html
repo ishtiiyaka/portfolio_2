@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — Ishtiyaq Ahmad</title>
+  
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="shared.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  
+  <style>
+    /* ─── ABOUT SPECIFIC STYLES ─── */
+    .page-wrapper {
+      padding-top: var(--nav-height);
+      display: grid; grid-template-columns: 1fr 1fr;
+      background: var(--bg); min-height: 80vh;
+    }
+    
+    .about-left { padding: var(--section-pad); border-right: var(--border); display: flex; flex-direction: column; justify-content: center; }
+    .about-body { font-size: var(--text-body); line-height: 2.1; color: var(--ink-dim); max-width: 480px; }
+    .about-body p + p { margin-top: 1.5rem; }
+    .about-body strong { color: var(--ink); font-weight: 500; }
+    
+    .about-right { padding: var(--section-pad); display: flex; flex-direction: column; justify-content: center; }
+    
+    .stats-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+      background: var(--rule); border: var(--border); margin-bottom: 3rem;
+    }
+    .stat { background: var(--bg); padding: 2.5rem 2rem; transition: background var(--transition); }
+    .stat:hover { background: var(--bg-alt); }
+    .stat-n { font-family: var(--font-display); font-size: clamp(2.2rem, 3vw, 3rem); font-weight: 900; color: var(--ink); letter-spacing: -0.04em; line-height: 1; }
+    .stat-n .unit { font-size: 0.5em; color: var(--accent); vertical-align: super; }
+    .stat-lbl { font-family: var(--font-body); font-size: var(--text-micro); letter-spacing: 0.2em; color: var(--ink-dim); text-transform: uppercase; margin-top: 0.6rem; }
+    
+    .about-quote { font-family: var(--font-display); font-size: 1.15rem; font-style: italic; color: var(--accent-blue); line-height: 1.65; border-left: 2px solid var(--accent); padding-left: 1.5rem; }
+    .about-quote cite { display: block; font-family: var(--font-body); font-size: var(--text-micro); font-style: normal; letter-spacing: 0.2em; color: var(--ink-dim); text-transform: uppercase; margin-top: 0.75rem; }
+
+    @media(max-width: 960px){
+      .page-wrapper { grid-template-columns: 1fr; }
+      .about-left, .about-right { padding: var(--section-pad-sm); border: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="cur"></div><div id="cur-ring"></div>
+  <div id="loader"><div class="ld-logo">IA<em>.</em></div><div class="ld-bar"><div class="ld-fill" id="ld-fill-el"></div></div></div>
+
+  <nav class="main-nav">
+    <a href="index.html" class="nav-logo">IA.</a>
+    <ul class="nav-links">
+      <li><a href="about.html" class="active">About</a></li>
+      <li><a href="stack.html">Stack</a></li>
+      <li><a href="projects.html">Projects</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+  </nav>
+
+  <main class="page-wrapper">
+    <div class="about-left">
+      <div class="section-label rv">001 — Architecture</div>
+      <h1 class="sec-title rv" style="margin-bottom: 2.5rem;">Built in the<br><em>Real World.</em><br>Coded for<br>the Digital.</h1>
+      
+      <div class="about-body rv">
+        <p>I build systems that move and interfaces that feel alive. Emerging from the high-altitude terrains of <strong>Gilgit-Baltistan</strong>, I now pursue Mechatronics and Control Engineering at <strong>UET Lahore</strong>, where I sit at the precise intersection of machines and software.</p>
+        <p>I don't just write scripts — I reverse-engineer proprietary hardware protocols, design precision 3D-printed components, and craft <strong>production-grade web experiences</strong> that refuse to look like everything else. Every project is a complete, end-to-end ecosystem.</p>
+        <p>Fluent in English, Urdu, and Burushaski. Currently acquiring <strong>Mandarin (HSK)</strong>. Running Kubuntu with a custom Zsh + Powerlevel10k environment, because the tools matter.</p>
+      </div>
+    </div>
+
+    <div class="about-right">
+      <div class="stats-grid rv">
+        <div class="stat">
+          <div class="stat-n">4<span class="unit">+</span></div>
+          <div class="stat-lbl">Engineering Disciplines</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n">4</div>
+          <div class="stat-lbl">Languages Spoken</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n">∞</div>
+          <div class="stat-lbl">End-to-End Systems</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n">UET</div>
+          <div class="stat-lbl">Lahore — Mechatronics Eng.</div>
+        </div>
+      </div>
+      
+      <blockquote class="about-quote rv">
+        "Engineering is not merely about making things work. It is about making things worth working for."
+        <cite>— Ishtiyaq Ahmad</cite>
+      </blockquote>
+    </div>
+  </main>
+
+  <div class="cross-links">
+    <a href="index.html" class="cross-link-card">
+      <div>
+        <div class="clc-label">Previous</div>
+        <div class="clc-title">Home</div>
+      </div>
+      <div class="clc-arrow">←</div>
+    </a>
+    <a href="stack.html" class="cross-link-card" style="text-align: right; flex-direction: row-reverse;">
+      <div>
+        <div class="clc-label">Next</div>
+        <div class="clc-title">Stack</div>
+      </div>
+      <div class="clc-arrow">→</div>
+    </a>
+  </div>
+
+  <footer class="site-footer">
+    <a href="index.html" class="foot-logo">IA<em>.</em></a>
+    <div class="foot-links">
+      <a href="about.html">About</a>
+      <a href="stack.html">Stack</a>
+      <a href="projects.html">Projects</a>
+      <a href="contact.html">Contact</a>
+    </div>
+    <div class="foot-copy">© <span class="yr"></span> ISHTIYAQ AHMAD. ALL RIGHTS RESERVED.</div>
+  </footer>
+
+  <script src="shared.js"></script>
+</body>
+</html>
