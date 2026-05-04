@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hardware &amp; Fabrication — Ishtiyaq Ahmad</title>
+
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="shared.css">
+
+<!-- GSAP + ScrollTrigger -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<style>
+/* ==========================================================================
+   🎨 THEME OVERRIDE: DARK COPPER — Hardware & Fabrication
+   ========================================================================== */
+:root {
+  --bg:          #0f0e0c;
+  --bg-alt:      #1a1815;
+  --bg-dark:     #0f0e0c;
+  --bg-dark-alt: #1a1815;
+  --ink:         #f2ede4;
+  --ink-dim:     rgba(242,237,228,0.5);
+  --ink-light:   #f2ede4;
+  --ink-faint:   rgba(242,237,228,0.25);
+  --accent:      #b5651d;
+  --accent-2:    #d4843a;
+  --accent-blue: #1a3a6e;
+  --rule:        rgba(242,237,228,0.08);
+  --rule-dark:   rgba(242,237,228,0.08);
+  --border:      1px solid rgba(242,237,228,0.08);
+  --border-dark: 1px solid rgba(242,237,228,0.08);
+  --green:       #4ade80;
+  --white:       #f2ede4;
+}
+
+/* ─── BACKGROUND GRID ─── */
+.bg-grid {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-image: 
+    linear-gradient(var(--rule) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+  background-size: 60px 60px;
+  background-position: center top;
+  mask-image: radial-gradient(ellipse at center, black 10%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 10%, transparent 85%);
+}
+
+/* ─── CURSOR OVERRIDES ─── */
+#cur { mix-blend-mode: normal; }
+#cur-ring {
+  animation: ring-spin 10s linear infinite;
+  border-style: dashed;
+  mix-blend-mode: normal;
+}
+@keyframes ring-spin { 100% { transform: translate(-50%,-50%) rotate(360deg); } }
+body.hov #cur { width: 40px; height: 40px; mix-blend-mode: difference; background: var(--ink); border-radius: 50%; }
+body.hov #cur-ring { width: 70px; height: 70px; border-style: solid; opacity: .15; border-color: var(--ink); }
+
+/* ─── NAV OVERRIDE ─── */
+.project-nav {
+  background: linear-gradient(to bottom, rgba(15,14,12,0.95), transparent);
+  backdrop-filter: blur(8px);
+}
+.nav-back { color: var(--accent); }
+.nav-back:hover { color: var(--accent-2); transform: translateX(-5px); }
+.nav-badge { color: var(--green); }
+.nav-badge::before {
+  content: ''; width: 6px; height: 6px; background: var(--green);
+  border-radius: 50%; animation: pulse 2s infinite;
+  display: inline-block; margin-right: .5rem;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ─── LAYOUT ─── */
+.container {
+  display: grid; grid-template-columns: 2.5fr 7.5fr; min-height: 100vh;
+  padding: 8rem 4rem 4rem; max-width: 1700px; margin: 0 auto; gap: 8rem;
+}
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  position: sticky; top: 8rem; height: fit-content;
+  border-left: 1px solid var(--rule); padding-left: 2.5rem;
+}
+.eyebrow {
+  font-family: var(--font-label); font-size: .65rem; font-weight: 700;
+  letter-spacing: .3em; color: var(--ink-dim);
+  text-transform: uppercase; margin-bottom: 1.5rem;
+}
+.page-title {
+  font-family: var(--font-display); font-size: clamp(3rem, 5vw, 5rem);
+  font-weight: 900; line-height: .9; letter-spacing: -.03em;
+  color: var(--ink); margin-bottom: 2.5rem;
+}
+.page-title em { font-style: italic; color: var(--accent); }
+.sidebar-desc { font-size: .75rem; line-height: 1.9; color: var(--ink-dim); max-width: 320px; }
+.index-list {
+  list-style: none; display: flex; flex-direction: column; gap: 1.2rem; margin-top: 4rem;
+  counter-reset: idx;
+}
+.index-list a {
+  font-size: .7rem; letter-spacing: .15em; text-transform: uppercase;
+  color: var(--ink-dim); text-decoration: none;
+  display: flex; align-items: center; gap: 1rem; transition: all .3s;
+  counter-increment: idx;
+}
+.index-list a::before {
+  content: '0' counter(idx); font-size: .55rem;
+  color: rgba(242,237,228,.15); font-weight: bold;
+}
+.index-list a:hover, .index-list a.active { color: var(--accent-2); transform: translateX(10px); }
+.index-list a:hover::before, .index-list a.active::before { color: var(--accent); }
+
+/* ─── CONTENT AREA ─── */
+.content-area { display: flex; flex-direction: column; gap: 10rem; padding-bottom: 10rem; }
+.module { position: relative; }
+.module::before {
+  content: ''; position: absolute; top: -3rem; left: 0; width: 100%; height: 1px;
+  background: linear-gradient(90deg, rgba(242,237,228,.15) 0%, transparent 100%);
+}
+.mod-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3.5rem; }
+.mod-num {
+  font-family: var(--font-display); font-size: 5rem; font-weight: 900; line-height: .8;
+  color: transparent; -webkit-text-stroke: 1px rgba(242,237,228,.15); user-select: none;
+}
+.mod-title { font-family: var(--font-display); font-size: 2.8rem; font-weight: 700; letter-spacing: -.02em; color: var(--ink); margin-bottom: .5rem; }
+.mod-subtitle { font-family: var(--font-label); font-size: .9rem; font-weight: 700; letter-spacing: .1em; color: var(--accent-2); text-transform: uppercase; }
+.mod-body { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; }
+.mod-text { font-size: .85rem; line-height: 2.2; color: var(--ink-dim); }
+.mod-text p { margin-bottom: 1.5rem; }
+.mod-text strong { color: var(--ink); font-weight: 500; }
+.mod-text ul { margin-left: 1.5rem; margin-bottom: 1.5rem; list-style-type: square; color: var(--accent); }
+.mod-text li { margin-bottom: .5rem; }
+.mod-text li span { color: var(--ink-dim); }
+
+/* ─── DATA PANELS ─── */
+.data-panel {
+  background: var(--bg-alt); border: var(--border);
+  display: flex; flex-direction: column; gap: 1.5rem; position: relative; overflow: hidden;
+  padding: 2rem;
+  transition: box-shadow .3s;
+}
+.data-panel:hover { box-shadow: 0 8px 32px rgba(0,0,0,.4); }
+.dp-header {
+  font-size: .6rem; letter-spacing: .25em; text-transform: uppercase; color: var(--ink-dim);
+  border-bottom: 1px solid var(--rule); padding-bottom: 1rem;
+  display: flex; justify-content: space-between;
+}
+
+/* CAD Grid Vis */
+.vis-cad { height: 180px; display: grid; grid-template-columns: repeat(8,1fr); gap: 2px; }
+.vis-cad div { background: var(--rule); transition: background .3s; }
+.vis-cad div:nth-child(3n) { background: rgba(181,101,29,.2); }
+.vis-cad div:nth-child(7n) { background: rgba(181,101,29,.5); }
+
+/* G-Code Vis */
+.vis-gcode { font-family: var(--font-body); font-size: .7rem; color: var(--ink-dim); line-height: 1.6; white-space: pre; }
+.vis-gcode .cmd { color: var(--accent-2); }
+.vis-gcode .val { color: var(--green); }
+
+/* Register Map Vis */
+.vis-reg { display: flex; flex-direction: column; gap: 4px; }
+.reg-row { display: grid; grid-template-columns: 80px 1fr; font-size: .7rem; }
+.reg-addr { color: var(--ink-dim); }
+.reg-bits { display: flex; gap: 2px; }
+.reg-bits span { flex: 1; background: var(--rule); text-align: center; color: var(--bg); padding: 4px 0; font-size: .6rem; }
+.reg-bits span.high { background: var(--accent); color: var(--ink); }
+.reg-bits span.rw   { background: var(--accent-blue); color: var(--ink); }
+
+/* Hex Dump Vis */
+.vis-hex { font-size: .75rem; line-height: 1.7; color: var(--ink-dim); }
+.hex-offset { color: var(--ink-dim); margin-right: 1rem; }
+.hex-data { color: var(--accent-2); word-spacing: .5rem; }
+.hex-ascii { margin-left: 1rem; color: rgba(242,237,228,.3); }
+.hex-hl { background: rgba(74,222,128,.2); color: var(--green); padding: 0 2px; }
+
+/* Math Vis */
+.vis-math {
+  font-family: var(--font-display); font-size: 1.2rem; font-style: italic; color: var(--ink);
+  display: flex; align-items: center; justify-content: center; height: 150px;
+  border: 1px dashed var(--rule);
+}
+.vis-math sub { font-size: .6em; }
+
+/* Specs Grid */
+.specs-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+  background: var(--rule); border: var(--border);
+}
+.spec-box { background: var(--bg-alt); padding: 1.5rem 1rem; }
+.sb-label { font-size: .55rem; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: .5rem; }
+.sb-value { font-family: var(--font-label); font-size: .9rem; font-weight: 700; color: var(--ink); line-height: 1.3; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 1200px) { .mod-body { grid-template-columns: 1fr; } .container { grid-template-columns: 3fr 7fr; } }
+@media (max-width: 960px) {
+  .container { grid-template-columns: 1fr; gap: 4rem; padding: 6rem 2rem 2rem; }
+  .sidebar { position: relative; top: 0; border-left: none; padding-left: 0; border-bottom: var(--border); padding-bottom: 2rem; }
+  .index-list { flex-direction: row; flex-wrap: wrap; gap: 1.5rem; }
+  .mod-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div class="bg-grid"></div>
+
+<div id="loader">
+  <div class="ld-logo">IA<em>.</em></div>
+  <div class="ld-bar"><div class="ld-fill" id="ld-fill-el"></div></div>
+</div>
+
+<div id="section-dots"></div>
+
+<!-- NAV -->
+<nav class="project-nav">
+  <a href="main.html" class="nav-back">Return to Main OS</a>
+  <div class="nav-badge">Hardware Module Online</div>
+</nav>
+
+<div class="container">
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+    <div class="eyebrow">// Stack Protocol: 002.A</div>
+    <h1 class="page-title">Hardware<br><em>&amp;</em> Fabrication</h1>
+    <p class="sidebar-desc">
+      Where digital logic dictates physical reality. From bare-metal ARM architecture and proprietary protocol reverse-engineering to high-tolerance generative CAD. This is the foundation of mechatronic synthesis.
+    </p>
+    <ul class="index-list">
+      <li><a href="#cad">Computer Aided Design</a></li>
+      <li><a href="#fab">Additive Fabrication</a></li>
+      <li><a href="#embedded">Embedded Architecture</a></li>
+      <li><a href="#protocols">Protocol Reverse-Eng.</a></li>
+      <li><a href="#sensors">Sensor Fusion &amp; Power</a></li>
+      <li><a href="#pcb">PCB &amp; Schematics</a></li>
+    </ul>
+  </aside>
+
+  <!-- RIGHT CONTENT -->
+  <main class="content-area">
+
+    <!-- 01: CAD -->
+    <article id="cad" class="module rv">
+      <div class="mod-header">
+        <div>
+          <h2 class="mod-title">SolidWorks &amp; Fusion 360</h2>
+          <div class="mod-subtitle">Parametric Assemblies &amp; DFM</div>
+        </div>
+        <div class="mod-num">01</div>
+      </div>
+      <div class="mod-body">
+        <div class="mod-text">
+          <p>My mechanical design workflow bypasses basic aesthetic modeling in favor of strict, data-driven engineering. I utilize <strong>Top-Down Assembly</strong> techniques to ensure complex robotic linkages inherit dimensions dynamically, eliminating clearance errors upon fabrication.</p>
+          <p>Before a single piece is manufactured, designs undergo rigorous <strong>Finite Element Analysis (FEA)</strong>. I simulate static loads and kinematic stress states to identify structural bottlenecks and yielding points.</p>
+          <ul>
+            <li><span><strong>Generative Design:</strong> AI-driven topological optimization to reduce end-effector weight while maintaining structural rigidity ratios.</span></li>
+            <li><span><strong>Kinematic Linkages:</strong> Inverse kinematics visualization and joint collision detection directly within the assembly environment.</span></li>
+            <li><span><strong>Design for Manufacturing (DFM):</strong> Modeling specific to the limitations of FDM/SLA printing or CNC machining.</span></li>
+          </ul>
+        </div>
+        <div class="data-panel">
+          <div class="dp-header"><span>FEA Topological Mesh</span><span>Stress: Nominal</span></div>
+          <div class="vis-cad">
+            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+          </div>
+          <div class="specs-grid">
+            <div class="spec-box"><div class="sb-label">Tolerance Config</div><div class="sb-value">H7/g6 (Dynamic)</div></div>
+            <div class="spec-box"><div class="sb-label">Core Simulation</div><div class="sb-value">Von Mises Yield</div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 02: FABRICATION -->
+    <article id="fab" class="module rv">
+      <div class="mod-header">
+        <div>
+          <h2 class="mod-title">Additive Fabrication</h2>
+          <div class="mod-subtitle">High-Speed CoreXY &amp; Polymer Science</div>
+        </div>
+        <div class="mod-num">02</div>
+      </div>
+      <div class="mod-body">
+        <div class="mod-text">
+          <p>Operating high-speed CoreXY systems (Bambu Lab / QIDI Tech) requires an intimate understanding of polymer thermodynamics. I specialize in engineering-grade materials like <strong>Carbon Fiber-filled Nylon (PA-CF), ABS/ASA, and PETG</strong> for high-torque robotic actuators.</p>
+          <p>This involves deep dive slicer optimization (OrcaSlicer/BambuStudio). I tune <strong>volumetric flow rates (mm³/s)</strong>, calibrate Linear Advance (K-factor) to eliminate corner bulging at 300+ mm/s, and adjust Input Shaping resonance compensations.</p>
+          <p>By manipulating layer adhesion thermal thresholds and infill geometries (Gyroid vs Cubic for multi-directional stress), I fabricate components that rival injection-molded parts in tensile strength.</p>
+        </div>
+        <div class="data-panel">
+          <div class="dp-header"><span>G-Code Stream / OrcaSlicer</span><span>Line: 8402</span></div>
+          <div class="vis-gcode"><span class="cmd">M104</span> S<span class="val">280</span> ; Set hotend temp (PA-CF)
+<span class="cmd">M140</span> S<span class="val">100</span> ; Set bed temp
+<span class="cmd">M900</span> K<span class="val">0.035</span> ; Linear Advance
+<span class="cmd">G1</span> X<span class="val">145.2</span> Y<span class="val">110.5</span> E<span class="val">1.24</span> F<span class="val">18000</span>
+<span class="cmd">G1</span> X<span class="val">145.2</span> Y<span class="val">120.0</span> E<span class="val">1.45</span>
+; --- [ LAYER 42: INFILL ] ---
+<span class="cmd">G1</span> F<span class="val">24000</span> ; Accel to Max</div>
+          <div class="specs-grid">
+            <div class="spec-box"><div class="sb-label">Max Volumetric</div><div class="sb-value">~24 mm³/s (PA)</div></div>
+            <div class="spec-box"><div class="sb-label">Resonance Comp</div><div class="sb-value">Input Shaping (XY)</div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 03: EMBEDDED -->
+    <article id="embedded" class="module rv">
+      <div class="mod-header">
+        <div>
+          <h2 class="mod-title">TM4C123G &amp; Embedded</h2>
+          <div class="mod-subtitle">Bare-Metal ARM Cortex-M4F Architecture</div>
+        </div>
+        <div class="mod-num">03</div>
+      </div>
+      <div class="mod-body">
+        <div class="mod-text">
+          <p>My embedded systems philosophy rejects the bloated abstractions of Arduino. I write <strong>Bare-Metal C</strong> directly manipulating system registers on the Texas Instruments TM4C123GH6PM microcontroller (32-bit ARM Cortex-M4F).</p>
+          <p>This allows for microsecond-level determinism. I leverage the <strong>Nested Vector Interrupt Controller (NVIC)</strong> for precise, preemptive multitasking without needing an RTOS. I develop custom drivers for internal peripherals: Timers, ADC, UART, and I2C.</p>
+          <p><strong>Actuation Control:</strong> I implement advanced motor control theory, including <strong>Field Oriented Control (FOC)</strong> and Space Vector PWM (SVPWM) to drive BLDC motors. By calculating Clarke and Park transformations in real-time using the MCU's hardware Floating-Point Unit (FPU), I achieve silent, ultra-high-torque actuation.</p>
+        </div>
+        <div class="data-panel">
+          <div class="dp-header"><span>Register Map / SYSCTL</span><span>Arch: ARM 32-bit</span></div>
+          <div class="vis-reg">
+            <div class="reg-row"><span class="reg-addr">0x400FE000</span><div class="reg-bits"><span class="high">1</span><span>0</span><span class="rw">R/W</span><span>0</span><span>0</span><span class="high">1</span><span>0</span><span>0</span></div></div>
+            <div class="reg-row"><span class="reg-addr">0x400FE060</span><div class="reg-bits"><span>0</span><span>0</span><span>0</span><span>0</span><span>0</span><span class="high">1</span><span class="rw">R/W</span><span class="high">1</span></div></div>
+            <div class="reg-row"><span class="reg-addr">0x400FE608</span><div class="reg-bits"><span class="high">1</span><span class="high">1</span><span class="high">1</span><span>0</span><span>0</span><span>0</span><span class="rw">R</span><span>0</span></div></div>
+            <div class="reg-row"><span class="reg-addr">RCGCWD</span><div style="font-size:.65rem;color:var(--ink-dim);padding-left:4px;line-height:1.5;">Watchdog Timer Clock Gating Control</div></div>
+          </div>
+          <div class="specs-grid" style="margin-top:1rem;">
+            <div class="spec-box"><div class="sb-label">FPU / DSP</div><div class="sb-value">Hardware Enabled</div></div>
+            <div class="spec-box"><div class="sb-label">Interrupts</div><div class="sb-value">Preemptive NVIC</div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 04: PROTOCOLS -->
+    <article id="protocols" class="module rv">
+      <div class="mod-header">
+        <div>
+          <h2 class="mod-title">UART &amp; Protocol Sniffing</h2>
+          <div class="mod-subtitle">Hardware Reverse-Engineering</div>
+        </div>
+        <div class="mod-num">04</div>
+      </div>
+      <div class="mod-body">
+        <div class="mod-text">
+          <p>Interfacing with undocumented, proprietary mainboards requires intensive reverse engineering. Using tools like <strong>Saleae Logic Analyzers</strong> and oscilloscopes, I physically tap into unlabeled test points to deduce hardware buses (UART, I2C, SPI).</p>
+          <p>The process is meticulous: analyzing bit-widths to deduce baud rates (e.g., non-standard 115200 or 256000 bps), capturing data streams, and performing hex analysis to crack the packet framing.</p>
+          <ul>
+            <li><span><strong>Packet Decoding:</strong> Identifying preamble bytes, payload structures, and calculating proprietary CRC/Checksum algorithms to validate data.</span></li>
+            <li><span><strong>Payload Injection:</strong> Building custom bridge microcontrollers to act as Man-in-the-Middle (MITM), actively modifying command bytes in real-time to hijack system behavior.</span></li>
+          </ul>
+        </div>
+        <div class="data-panel">
+          <div class="dp-header"><span>Serial Buffer / RX Dump</span><span>Baud: 115200 8N1</span></div>
+          <div class="vis-hex">
+            <div><span class="hex-offset">0x0000</span> <span class="hex-data">5A A5 <span class="hex-hl">08</span> 02 44 1B 00 00</span> <span class="hex-ascii">Z ¥ . . D . . .</span></div>
+            <div><span class="hex-offset">0x0008</span> <span class="hex-data">FF FF 00 00 <span class="hex-hl">A1</span> 2C 00 00</span> <span class="hex-ascii">. . . . ¡ , . .</span></div>
+            <div><span class="hex-offset">0x0010</span> <span class="hex-data">5A A5 04 <span class="hex-hl">03</span> 00 00 6E F1</span> <span class="hex-ascii">Z ¥ . . . . n ñ</span></div>
+            <div><span class="hex-offset">0x0018</span> <span class="hex-data">00 00 00 00 00 00 00 00</span> <span class="hex-ascii">. . . . . . . .</span></div>
+          </div>
+          <div class="specs-grid" style="margin-top:1rem;">
+            <div class="spec-box"><div class="sb-label">Analyzers</div><div class="sb-value">Saleae Logic 8</div></div>
+            <div class="spec-box"><div class="sb-label">Validation</div><div class="sb-value">Custom CRC-16</div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 05: SENSORS -->
+    <article id="sensors" class="module rv">
+      <div class="mod-header">
+        <div>
+          <h2 class="mod-title">MPU6050 &amp; Sensor Fusion</h2>
+          <div class="mod-subtitle">Spatial Orientation &amp; Current Telemetry</div>
+        </div>
+        <div class="mod-num">05</div>
+      </div>
+      <div class="mod-body">
+        <div class="mod-text">
+          <p>Raw physical data is inherently noisy and subject to drift. I design systems that rely on advanced <strong>Sensor Fusion</strong> mathematics to create stable environmental truths.</p>
+          <p>For spatial orientation (MPU6050 6-DoF IMU), I bypass simple Euler angle calculations (which suffer from Gimbal Lock) and implement <strong>Quaternion mathematics</strong>. By combining accelerometer and gyroscope data through a <strong>Complementary or Kalman Filter</strong>, I extract rock-solid Pitch/Roll/Yaw metrics crucial for self-balancing systems.</p>
+          <p><strong>Power Telemetry:</strong> Using Hall-effect based current sensors (ACS712), I monitor real-time phase currents of motors. By tuning hardware Op-Amps and MCU ADC resolutions, I create microsecond-fast software safety limits that detect motor stalls and mechanical blockages before components physically fail.</p>
+        </div>
+        <div class="data-panel">
+          <div class="dp-header"><span>Quaternion Matrix</span><span>Filter: Madgwick</span></div>
+          <div class="vis-math">
+            q<sub>w</sub> + q<sub>x</sub>i + q<sub>y</sub>j + q<sub>z</sub>k
+          </div>
+          <div class="specs-grid" style="margin-top:1rem;">
+            <div class="spec-box"><div class="sb-label">Filter Algorithm</div><div class="sb-value">Extended Kalman</div></div>
+            <div class="spec-box"><div class="sb-label">Fault Detection</div><div class="sb-value">&lt; 15ms Response</div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 06: PCB -->
+    <article id="pcb" class="module rv">
+      <div class="mod-header">
+        <div>
+          <h2 class="mod-title">PCB &amp; Schematic Design</h2>
+          <div class="mod-subtitle">Moving Beyond Prototypes</div>
+        </div>
+        <div class="mod-num">06</div>
+      </div>
+      <div class="mod-body">
+        <div class="mod-text">
+          <p>Breadboards are for ideation; custom PCBs are for deployment. I complete the hardware lifecycle by translating tangled prototype wires into highly reliable, professionally routed printed circuit boards.</p>
+          <p>Using <strong>KiCad / EasyEDA</strong>, I capture schematics, select surface mount components (SMD), and design multi-layer boards. Careful attention is paid to power delivery networks (PDN) ensuring separate copper pours for logic (3.3V) and noisy motor power (12V-24V) to prevent ground loops and EMI interference.</p>
+          <p>This holistic approach means my mechatronic systems aren't just fragile lab experiments; they are self-contained, robust units ready for real-world environmental stress.</p>
+        </div>
+        <div class="data-panel">
+          <div class="dp-header"><span>Routing Logic</span><span>Layers: 4-Layer FR4</span></div>
+          <div style="height:150px;background:#0a0f0d;border:1px solid #1f2924;position:relative;overflow:hidden;">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <path d="M 20 20 L 80 20 L 120 60 L 250 60" stroke="#b5651d" stroke-width="2" fill="none"/>
+              <circle cx="20" cy="20" r="4" fill="#d4843a"/>
+              <circle cx="250" cy="60" r="4" fill="#d4843a"/>
+              <path d="M 40 100 L 90 100 L 110 80 L 200 80" stroke="#2654a3" stroke-width="2" fill="none"/>
+              <circle cx="40" cy="100" r="4" fill="#4ade80"/>
+              <path d="M 150 140 L 180 110 L 280 110" stroke="#b5651d" stroke-width="2" fill="none"/>
+              <circle cx="150" cy="140" r="4" fill="#d4843a"/>
+              <polygon points="200,10 280,10 280,140 200,140" fill="rgba(38,84,163,0.1)" stroke="#2654a3" stroke-width="1" stroke-dasharray="2,2"/>
+            </svg>
+          </div>
+          <div class="specs-grid" style="margin-top:1rem;">
+            <div class="spec-box"><div class="sb-label">EDA Software</div><div class="sb-value">KiCad / EasyEDA</div></div>
+            <div class="spec-box"><div class="sb-label">Architecture</div><div class="sb-value">SMD + Mixed Signal</div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+  </main>
+</div>
+
+<footer class="site-footer">
+  <a href="main.html" class="foot-logo">IA<em>.</em></a>
+  <div class="foot-links">
+    <a href="about.html">About</a>
+    <a href="education.html">Education</a>
+    <a href="stack-hardware.html">Stack</a>
+    <a href="main.html#projects">Projects</a>
+    <a href="main.html#contact">Contact</a>
+  </div>
+  <div class="foot-copy">© <span class="yr"></span> ISHTIYAQ AHMAD. ALL RIGHTS RESERVED.</div>
+</footer>
+
+<script>
+// Stack page scroll spy — highlights active sidebar index link
+const sections = document.querySelectorAll('.module');
+const navLinks = document.querySelectorAll('.index-list a');
+
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(section => {
+    if (pageYOffset >= (section.offsetTop - 350)) {
+      current = section.getAttribute('id');
+    }
+  });
+  navLinks.forEach(link => {
+    link.classList.toggle('active', link.getAttribute('href').includes(current));
+  });
+}, { passive: true });
+
+// Sidebar entrance
+gsap.fromTo('.sidebar',
+  { opacity: 0, x: -40 },
+  { opacity: 1, x: 0, duration: 1.2, ease: 'power3.out', delay: 0.2 }
+);
+</script>
+
+<script src="shared.js"></script>
+</body>
+</html>

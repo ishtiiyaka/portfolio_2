@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 05: Data Pipelines — Ishtiyaq Ahmad</title>
+
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="shared.css">
+
+<!-- GSAP + ScrollTrigger -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<style>
+/* ==========================================================================
+   🎨 THEME OVERRIDE: DEEP DATA / CYBERNETIC (Dark Void, Neon Cyan, Hot Magenta)
+   ========================================================================== */
+:root {
+  --bg:          #04030a;
+  --bg-alt:      #0a0816;
+  --bg-dark:     #04030a;
+  --bg-dark-alt: #0a0816;
+  --ink:         #e2e2ee;
+  --ink-dim:     #a0a0b8;
+  --ink-light:   #e2e2ee;
+  --ink-faint:   rgba(226,226,238,0.3);
+  --accent:      #00f0ff;
+  --accent-2:    #00f0ff;
+  --accent-blue: #7a00ff;
+  --rule:        rgba(0,240,255,0.15);
+  --rule-dark:   rgba(0,240,255,0.15);
+  --border:      1px solid rgba(0,240,255,0.15);
+  --border-dark: 1px solid rgba(0,240,255,0.15);
+  --green:       #4ade80;
+  --white:       #e2e2ee;
+
+  /* Cybernetic extra vars */
+  --magenta: #ff007f;
+  --violet:  #7a00ff;
+  --dim:     #4b4b66;
+}
+
+/* ─── CYBER GRID BACKGROUND ─── */
+.cyber-grid {
+  position: fixed; inset: 0; z-index: -1;
+  background-image: 
+    linear-gradient(rgba(122,0,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(122,0,255,0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  transform: perspective(500px) rotateX(60deg) translateY(-100px) scale(3);
+  transform-origin: top center;
+  animation: gridMove 10s linear infinite;
+  mask-image: linear-gradient(to bottom, transparent 20%, black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 20%, black 100%);
+}
+@keyframes gridMove { 0%{background-position:0 0} 100%{background-position:0 40px} }
+
+/* ─── CURSOR OVERRIDES (cyan glow) ─── */
+#cur {
+  width: 4px; height: 4px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent);
+  mix-blend-mode: normal;
+}
+#cur::before {
+  content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
+  border: 1px solid rgba(0,240,255,0.5); border-radius: 50%;
+  animation: spin 4s linear infinite;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+#cur-ring { border-color: rgba(0,240,255,0.3); mix-blend-mode: normal; }
+body.hov #cur { width: 12px; height: 12px; background: var(--magenta); box-shadow: 0 0 15px var(--magenta); }
+body.hov #cur-ring { border-color: rgba(255,0,127,0.4); }
+
+/* ─── PROJECT NAV OVERRIDE ─── */
+.project-nav {
+  background: linear-gradient(to bottom, var(--bg), transparent);
+}
+.nav-back { color: var(--accent); text-shadow: 0 0 10px rgba(0,240,255,.5); }
+.nav-back:hover { color: var(--magenta); text-shadow: 0 0 10px rgba(255,0,127,.5); }
+.nav-badge { color: var(--magenta); }
+.nav-badge::before { content: '■'; animation: blink 1s step-end infinite; margin-right: .5rem; }
+
+/* ─── HEADER ─── */
+.header-hero { padding: 10rem 4rem 4rem; max-width: 1400px; margin: 0 auto; position: relative; }
+.h-meta {
+  font-family: var(--font-display); font-size: .7rem; letter-spacing: .4em;
+  color: var(--violet); text-transform: uppercase; margin-bottom: 2rem;
+  display: flex; gap: 2rem;
+}
+.h-title {
+  font-family: var(--font-display); font-size: clamp(3rem, 5.5vw, 5.5rem);
+  font-weight: 900; line-height: 1.1; color: var(--ink); margin-bottom: 1.5rem;
+  text-shadow: 0 0 30px rgba(122,0,255,.3);
+}
+.h-title span { color: var(--accent); }
+.h-desc { font-size: .9rem; line-height: 1.8; color: var(--ink-dim); max-width: 750px; }
+
+/* ─── CONTENT GRID ─── */
+.content-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  max-width: 1400px; margin: 0 auto; padding: 4rem; gap: 4rem;
+}
+
+/* ─── TEXT BLOCKS ─── */
+.text-block h3 {
+  font-family: var(--font-display); font-size: 1.2rem; color: var(--accent);
+  text-transform: uppercase; letter-spacing: .1em; margin-bottom: 1.5rem;
+  text-shadow: 0 0 10px rgba(0,240,255,.3);
+}
+.text-block p { font-size: .85rem; line-height: 2.1; color: var(--ink-dim); margin-bottom: 1.5rem; }
+.text-block strong { color: var(--ink); }
+
+/* ─── GLOWING DATA PANELS ─── */
+.data-panel {
+  background: var(--bg-alt); border: 1px solid var(--rule);
+  box-shadow: 0 0 20px rgba(0,240,255,.05), inset 0 0 20px rgba(122,0,255,.05);
+  display: flex; flex-direction: column; overflow: hidden; position: relative;
+}
+.dp-head {
+  background: rgba(0,240,255,.05); padding: .75rem 1rem; font-size: .6rem;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: var(--accent); display: flex; justify-content: space-between;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* Vis 1: Thread Pool / Async Workers */
+.vis-threads { padding: 2rem; display: flex; flex-direction: column; gap: 1rem; height: 220px; justify-content: center; }
+.thread { display: flex; align-items: center; gap: 1rem; }
+.th-id { font-size: .6rem; color: var(--dim); width: 60px; text-align: right; }
+.th-bar-bg { flex: 1; height: 4px; background: rgba(255,255,255,.05); border-radius: 2px; position: relative; overflow: hidden; }
+.th-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; position: absolute; left: 0; top: 0; box-shadow: 0 0 10px var(--accent); }
+.th-bar-fill.t1 { animation: load 1.5s ease-in-out infinite alternate; }
+.th-bar-fill.t2 { animation: load 2.1s ease-in-out infinite alternate-reverse; background: var(--magenta); box-shadow: 0 0 10px var(--magenta); }
+.th-bar-fill.t3 { animation: load 1.2s ease-in-out infinite alternate; background: var(--violet); box-shadow: 0 0 10px var(--violet); }
+.th-bar-fill.t4 { animation: load 2.5s ease-in-out infinite alternate-reverse; }
+@keyframes load { 0%{width:10%} 100%{width:95%} }
+
+/* Vis 2: JSON Payload Stream */
+.vis-json {
+  padding: 1.5rem; font-size: .7rem; line-height: 1.6; color: var(--dim);
+  height: 250px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;
+}
+.json-stream { display: flex; flex-direction: column; gap: .5rem; animation: scrollUp 4s linear infinite; }
+.j-key { color: var(--accent); }
+.j-str { color: var(--magenta); }
+.j-num { color: #facc15; }
+.j-block { background: rgba(0,0,0,.4); padding: .5rem; border-left: 2px solid var(--violet); }
+@keyframes scrollUp { 0%{transform:translateY(50px);opacity:.8} 100%{transform:translateY(-20px);opacity:1} }
+
+/* Specs Grid */
+.specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--rule); border-top: 1px solid var(--rule); }
+.spec-box { background: var(--bg-alt); padding: 1.2rem 1rem; }
+.sb-label { font-size: .55rem; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); margin-bottom: .5rem; }
+.sb-value { font-family: var(--font-label); font-size: .85rem; color: var(--ink); }
+
+/* ─── PROJECT PHOTO SLOTS ─── */
+.proj-img-row { display:grid;gap:2px;background:rgba(0,240,255,.08);margin:3rem 0; }
+.proj-img-row.cols-3 { grid-template-columns:1fr 1fr 1fr; }
+.proj-img-row.cols-2 { grid-template-columns:2fr 1fr; }
+.proj-img-row.cols-1 { grid-template-columns:1fr; }
+figure.proj-ph { margin:0;position:relative;overflow:hidden;background:var(--bg-alt);border:1px dashed rgba(0,240,255,.25);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;cursor:pointer;transition:border-color .3s,background .3s; }
+figure.proj-ph:hover { border-color:var(--accent);background:rgba(0,240,255,.06); }
+figure.proj-ph img { width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:block; }
+.ph-body { display:flex;flex-direction:column;align-items:center;gap:.6rem;padding:2rem;text-align:center;position:relative;z-index:1; }
+.ph-icon { font-size:2rem;opacity:.4; }
+.ph-label { font-family:var(--font-display);font-size:.65rem;font-weight:700;letter-spacing:.35em;text-transform:uppercase;color:var(--accent);opacity:.8; }
+.ph-hint  { font-family:var(--font-body);font-size:.55rem;letter-spacing:.15em;color:var(--ink-dim);opacity:.5; }
+figcaption.ph-cap { background:rgba(0,0,0,.4);padding:.5rem 1rem;font-family:var(--font-body);font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim);border-top:1px solid var(--rule);text-align:center; }
+figure.proj-ph.tall  { min-height:300px; }
+figure.proj-ph.short { min-height:140px; }
+figure.proj-ph.wide  { min-height:260px; }
+
+@media (max-width: 960px) {
+  .content-grid { grid-template-columns: 1fr; padding: 2rem; gap: 4rem; }
+  .h-title { font-size: 2.5rem; }
+  .proj-img-row.cols-3,.proj-img-row.cols-2 { grid-template-columns:1fr 1fr; }
+}
+@media (max-width:600px) {
+  .proj-img-row.cols-3,.proj-img-row.cols-2 { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div class="cyber-grid"></div>
+
+<div id="loader">
+  <div class="ld-logo">IA<em>.</em></div>
+  <div class="ld-bar"><div class="ld-fill" id="ld-fill-el"></div></div>
+</div>
+
+<div id="section-dots"></div>
+
+<!-- NAV -->
+<nav class="project-nav">
+  <a href="main.html" class="nav-back">Terminate_Session()</a>
+  <div class="nav-badge">SCRAPER_NODE_ACTIVE</div>
+</nav>
+
+<header class="header-hero rv">
+  <div class="h-meta"><span>PRJ_05</span><span>Data Engineering</span></div>
+  <h1 class="h-title">Automated Media &amp;<br><span>Data Pipelines</span></h1>
+  <p class="h-desc">High-concurrency Python scraping architectures designed to bypass anti-bot protections, extract locked datasets, and automate large-scale media acquisition via headless browser orchestration.</p>
+</header>
+
+<main class="content-grid">
+  
+  <div class="text-block rv">
+    <h3>Headless Orchestration</h3>
+    <p>Manual data collection is a failure of engineering. I design autonomous Python pipelines utilizing <strong>Selenium WebDriver</strong> and <strong>BeautifulSoup4</strong> to interact with the web exactly as a human would, but at machine speed.</p>
+    <p>This goes beyond simple <code>requests.get()</code>. Modern web applications employ aggressive dynamic DOM rendering and anti-bot captchas. My scrapers utilize headless Chrome instances, spoofed user-agents, proxy rotation, and injected JavaScript to defeat canvas fingerprinting and solve captchas automatically, maintaining persistent sessions to scrape data sitting behind authenticated paywalls.</p>
+    
+    <h3 style="margin-top: 3rem;">Concurrent Pipeline Architecture</h3>
+    <p>When downloading gigabytes of proprietary media or traversing 100,000+ product pages, a synchronous script will take days. I implemented <strong>Asyncio and ThreadPoolExecutors</strong> to parallelize network I/O operations.</p>
+    <p>By dispatching hundreds of asynchronous worker nodes simultaneously, the system saturates the network bandwidth, reducing a 48-hour sequential extraction task down to a 3-hour parallel payload drop.</p>
+  </div>
+
+  <div class="rv" style="display:flex;flex-direction:column;gap:3rem;">
+    
+    <!-- Vis 1: Thread Pool -->
+    <div class="data-panel">
+      <div class="dp-head"><span>Asyncio Worker Pool</span><span>I/O LOAD</span></div>
+      <div class="vis-threads">
+        <div class="thread"><div class="th-id">WORKER_01</div><div class="th-bar-bg"><div class="th-bar-fill t1"></div></div></div>
+        <div class="thread"><div class="th-id">WORKER_02</div><div class="th-bar-bg"><div class="th-bar-fill t2"></div></div></div>
+        <div class="thread"><div class="th-id">WORKER_03</div><div class="th-bar-bg"><div class="th-bar-fill t3"></div></div></div>
+        <div class="thread"><div class="th-id">WORKER_04</div><div class="th-bar-bg"><div class="th-bar-fill t4"></div></div></div>
+        <div class="thread"><div class="th-id">WORKER_05</div><div class="th-bar-bg"><div class="th-bar-fill t1" style="animation-delay:-0.5s"></div></div></div>
+      </div>
+      <div class="specs-grid">
+        <div class="spec-box"><div class="sb-label">Concurrency Model</div><div class="sb-value">ThreadPoolExecutor</div></div>
+        <div class="spec-box"><div class="sb-label">Bandwidth Saturation</div><div class="sb-value">94.2%</div></div>
+      </div>
+    </div>
+
+    <!-- Vis 2: JSON Stream -->
+    <div class="data-panel">
+      <div class="dp-head"><span>Payload Extractor</span><span>DOM -> JSON</span></div>
+      <div class="vis-json">
+        <div class="json-stream">
+          <div class="j-block">
+            {<br>
+            &nbsp;&nbsp;<span class="j-key">"node_id"</span>: <span class="j-str">"ax_8819"</span>,<br>
+            &nbsp;&nbsp;<span class="j-key">"payload_url"</span>: <span class="j-str">"https://blob..."</span>,<br>
+            &nbsp;&nbsp;<span class="j-key">"size_kb"</span>: <span class="j-num">14205</span><br>
+            }
+          </div>
+          <div class="j-block">
+            {<br>
+            &nbsp;&nbsp;<span class="j-key">"node_id"</span>: <span class="j-str">"ax_8820"</span>,<br>
+            &nbsp;&nbsp;<span class="j-key">"payload_url"</span>: <span class="j-str">"https://blob..."</span>,<br>
+            &nbsp;&nbsp;<span class="j-key">"size_kb"</span>: <span class="j-num">8902</span><br>
+            }
+          </div>
+          <div class="j-block">
+            {<br>
+            &nbsp;&nbsp;<span class="j-key">"node_id"</span>: <span class="j-str">"ax_8821"</span>,<br>
+            &nbsp;&nbsp;<span class="j-key">"payload_url"</span>: <span class="j-str">"https://blob..."</span>,<br>
+            &nbsp;&nbsp;<span class="j-key">"size_kb"</span>: <span class="j-num">31044</span><br>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ PHOTO GALLERY — pipeline & code screenshots ══════════════════════
+       Replace .proj-ph body with <img src="…" alt="…"> for real photos
+  ════════════════════════════════════════════════════════════════════════ -->
+  <!-- 2-col: terminal running vs scraped data output -->
+  <div class="proj-img-row cols-2 rv" style="grid-column:1/-1;margin-top:3rem;">
+    <figure class="proj-ph wide">
+      <div class="ph-body">
+        <div class="ph-icon">🐍</div>
+        <div class="ph-label">Scraper Running — Terminal</div>
+        <div class="ph-hint">scraper_terminal.png</div>
+      </div>
+      <figcaption class="ph-cap">Asyncio Worker Pool — 5 Concurrent Nodes Active</figcaption>
+    </figure>
+    <figure class="proj-ph wide">
+      <div class="ph-body">
+        <div class="ph-icon">📁</div>
+        <div class="ph-label">Output File Structure</div>
+        <div class="ph-hint">output_folder.png</div>
+      </div>
+      <figcaption class="ph-cap">Organised Download Hierarchy — Auto-Named &amp; Hashed</figcaption>
+    </figure>
+  </div>
+
+  <!-- 3-across: code snippet, pandas dataframe print, file count stats -->
+  <div class="proj-img-row cols-3 rv" style="grid-column:1/-1;margin-top:2px;">
+    <figure class="proj-ph short">
+      <div class="ph-body">
+        <div class="ph-icon">📝</div>
+        <div class="ph-label">Scraper Source Code</div>
+        <div class="ph-hint">scraper_code_screenshot.png</div>
+      </div>
+      <figcaption class="ph-cap">BeautifulSoup + Selenium Session Logic</figcaption>
+    </figure>
+    <figure class="proj-ph short">
+      <div class="ph-body">
+        <div class="ph-icon">📊</div>
+        <div class="ph-label">Pandas DataFrame Output</div>
+        <div class="ph-hint">dataframe_output.png</div>
+      </div>
+      <figcaption class="ph-cap">Cleaned DataFrame — Null Rows Dropped</figcaption>
+    </figure>
+    <figure class="proj-ph short">
+      <div class="ph-body">
+        <div class="ph-icon">📈</div>
+        <div class="ph-label">Download Stats Log</div>
+        <div class="ph-hint">stats_log.png</div>
+      </div>
+      <figcaption class="ph-cap">Batch Completion — File Counts &amp; Sizes</figcaption>
+    </figure>
+  </div>
+
+  <div class="text-block rv" style="grid-column:1/-1;margin-top:2rem;border-top:1px solid var(--rule);padding-top:4rem;">
+    <h3>Data Structuring &amp; Cleaning (Pandas)</h3>
+    <p style="max-width:800px;">Extracting the data is only the first step. Raw scraped DOM elements are messy—filled with whitespace, unicode errors, and missing schema fields. I funnel the raw output into <strong>Pandas DataFrames</strong> to perform vectorized cleaning operations. I normalize text schemas, drop null correlates, and hash the final data blocks before writing to optimized formats like HDF5 or PostgreSQL databases, ensuring the data is immediately ready for downstream analytical models or UI ingestion.</p>
+  </div>
+
+</main>
+
+<!-- Cross-link navigation -->
+<div class="cross-links" style="border-top:1px solid var(--rule);">
+  <a href="main.html#projects" class="cross-link-card" style="background:var(--bg-alt);">
+    <div>
+      <div class="clc-label" style="color:var(--accent);">Back To</div>
+      <div class="clc-title" style="color:var(--ink);">All Projects</div>
+    </div>
+    <div class="clc-arrow left" style="color:var(--ink-dim);">←</div>
+  </a>
+  <a href="project-1170.html" class="cross-link-card" style="text-align:right;flex-direction:row-reverse;background:var(--bg-alt);">
+    <div>
+      <div class="clc-label" style="color:var(--accent);">Previous Project</div>
+      <div class="clc-title" style="color:var(--ink);">Project 1170</div>
+    </div>
+    <div class="clc-arrow right" style="color:var(--ink-dim);">→</div>
+  </a>
+</div>
+
+<footer class="site-footer">
+  <a href="main.html" class="foot-logo">IA<em>.</em></a>
+  <div class="foot-links">
+    <a href="about.html">About</a>
+    <a href="education.html">Education</a>
+    <a href="stack-hardware.html">Stack</a>
+    <a href="main.html#projects">Projects</a>
+    <a href="main.html#contact">Contact</a>
+  </div>
+  <div class="foot-copy">© <span class="yr"></span> ISHTIYAQ AHMAD. ALL RIGHTS RESERVED.</div>
+</footer>
+
+<script src="shared.js"></script>
+</body>
+</html>

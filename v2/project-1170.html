@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 1170 — Personal OS — Ishtiyaq Ahmad</title>
+
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="shared.css">
+
+<!-- GSAP + ScrollTrigger -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<style>
+/* ==========================================================================
+   🎨 THEME OVERRIDE: BRUTALIST MONOCHROME — stark black / white / blood red
+   Zero distractions. A system that demands accountability.
+   ========================================================================== */
+:root {
+  --bg:          #060606;
+  --bg-alt:      #0c0c0c;
+  --bg-dark:     #060606;
+  --bg-dark-alt: #111111;
+  --ink:         #f0f0f0;
+  --ink-dim:     rgba(240,240,240,0.4);
+  --ink-light:   #f0f0f0;
+  --ink-faint:   rgba(240,240,240,0.2);
+  --accent:      #dc2626;
+  --accent-2:    #ef4444;
+  --accent-blue: #dc2626;
+  --rule:        rgba(240,240,240,0.08);
+  --rule-dark:   rgba(220,38,38,0.25);
+  --border:      1px solid rgba(240,240,240,0.08);
+  --border-dark: 1px solid rgba(220,38,38,0.25);
+  --green:       #4ade80;
+  --white:       #ffffff;
+}
+
+/* ─── CURSOR OVERRIDES (red dot) ─── */
+#cur {
+  background: var(--accent);
+  border-radius: 50%;
+  mix-blend-mode: normal;
+}
+#cur-ring {
+  border-color: rgba(220,38,38,.5);
+  mix-blend-mode: normal;
+}
+body.hov #cur { width: 22px; height: 22px; background: var(--ink); }
+body.hov #cur-ring { width: 55px; height: 55px; border-color: rgba(240,240,240,.3); }
+
+/* ─── PROJECT NAV OVERRIDE ─── */
+.project-nav {
+  background: rgba(6,6,6,.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(220,38,38,.25);
+}
+.nav-back { color: rgba(240,240,240,.4); }
+.nav-back:hover { color: var(--ink); }
+.nav-badge { color: var(--accent); }
+.nav-badge::before {
+  content: ''; width: 6px; height: 6px; background: var(--accent);
+  border-radius: 50%; animation: blink 0.8s step-end infinite;
+  display: inline-block; margin-right: .5rem;
+}
+
+/* ─── HEADER ─── */
+.header-hero {
+  padding: 11rem 4rem 5rem;
+  max-width: 1400px; margin: 0 auto;
+  border-bottom: 1px solid var(--rule);
+  position: relative;
+}
+.countdown-badge {
+  display: inline-flex; align-items: center; gap: 1.2rem;
+  border: 1px solid rgba(220,38,38,.25); padding: .8rem 1.5rem;
+  margin-bottom: 3rem;
+}
+.cd-label { font-size: .58rem; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-dim); }
+.cd-number {
+  font-family: var(--font-display); font-size: 2.5rem; font-weight: 900;
+  color: var(--accent); letter-spacing: -.04em; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.cd-unit { font-size: .55rem; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-dim); }
+.h-meta {
+  font-family: var(--font-label); font-size: .72rem; letter-spacing: .35em;
+  color: var(--ink-dim); text-transform: uppercase; margin-bottom: 1.5rem;
+  display: flex; gap: 2.5rem;
+}
+.h-title {
+  font-family: var(--font-display); font-size: clamp(3rem, 6vw, 6.5rem);
+  font-weight: 900; line-height: .9; letter-spacing: -.04em; margin-bottom: 2.5rem;
+  color: var(--ink);
+}
+.h-title em { font-style: italic; color: var(--accent); }
+.h-desc { font-size: .92rem; line-height: 1.85; color: var(--ink-dim); max-width: 800px; }
+.h-tags { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 2rem; }
+.h-tag {
+  font-size: .58rem; letter-spacing: .15em; text-transform: uppercase;
+  border: 1px solid var(--rule); color: var(--ink-dim); padding: .25rem .7rem;
+}
+.h-tag.red { border-color: rgba(220,38,38,.25); color: var(--accent); }
+
+/* ─── CONTENT GRID ─── */
+.content-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  max-width: 1400px; margin: 0 auto; padding: 4rem; gap: 4rem;
+}
+
+/* ─── TEXT BLOCKS ─── */
+.text-block h3 {
+  font-family: var(--font-label); font-size: 1.1rem; color: var(--ink);
+  text-transform: uppercase; letter-spacing: .1em; margin-bottom: 1.5rem;
+  padding-bottom: .75rem; border-bottom: 1px solid rgba(220,38,38,.25);
+}
+.text-block p { font-size: .85rem; line-height: 2.1; color: var(--ink-dim); margin-bottom: 1.5rem; }
+.text-block strong { color: var(--ink); font-weight: 500; }
+.text-block ul { list-style: none; margin-bottom: 1.5rem; }
+.text-block ul li {
+  font-size: .82rem; line-height: 1.9; color: var(--ink-dim); padding: .5rem 0;
+  border-bottom: 1px solid var(--rule); display: flex; gap: .75rem;
+}
+.text-block ul li::before { content: '→'; color: var(--accent); flex-shrink: 0; }
+.text-block ul li strong { color: var(--ink); }
+
+/* ─── PANELS ─── */
+.panel {
+  background: var(--bg-alt); border: 1px solid var(--rule);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.panel.red-border { border-color: rgba(220,38,38,.25); }
+.panel-head {
+  background: var(--bg-dark-alt); padding: .8rem 1.2rem;
+  font-size: .6rem; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--ink-dim); display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--rule);
+}
+.panel-head .ph-red { color: var(--accent); }
+
+/* ─── COUNTDOWN DISPLAY ─── */
+.vis-countdown {
+  padding: 3rem 2rem; display: grid; grid-template-columns: repeat(4,1fr); gap: 2px;
+  background: var(--rule);
+}
+.cd-cell { background: var(--bg-alt); padding: 2rem 1rem; text-align: center; }
+.cd-cell-n {
+  font-family: var(--font-display); font-size: clamp(2rem, 4vw, 3.5rem);
+  font-weight: 900; color: var(--ink); letter-spacing: -.04em; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.cd-cell-n.red { color: var(--accent); }
+.cd-cell-l { font-size: .55rem; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-dim); margin-top: .5rem; }
+
+/* ─── PLATFORM GRID ─── */
+.vis-platforms { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+.platform-row {
+  display: flex; align-items: center; gap: 1.2rem;
+  padding: 1rem 1.2rem; border: 1px solid var(--rule);
+  transition: border-color .3s, background .3s;
+}
+.platform-row:hover { border-color: rgba(220,38,38,.25); background: rgba(220,38,38,.15); }
+.plt-icon { font-size: 1.2rem; width: 28px; text-align: center; flex-shrink: 0; }
+.plt-name { font-family: var(--font-label); font-size: .8rem; font-weight: 700; color: var(--ink); }
+.plt-desc { font-size: .6rem; color: var(--ink-dim); margin-top: .2rem; }
+.plt-status { margin-left: auto; font-size: .55rem; letter-spacing: .15em; text-transform: uppercase; color: var(--accent); }
+
+/* ─── INTERFACE PREVIEW ─── */
+.vis-interface {
+  padding: 1.5rem; min-height: 280px;
+  background: var(--bg-dark-alt); position: relative; overflow: hidden;
+  display: flex; flex-direction: column; gap: 1.2rem;
+}
+.ui-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid rgba(220,38,38,.25); padding-bottom: .8rem;
+}
+.ui-title { font-family: var(--font-display); font-size: 1.4rem; font-weight: 900; letter-spacing: -.03em; color: var(--ink); }
+.ui-clock { font-family: var(--font-body); font-size: .7rem; color: var(--ink-dim); }
+.ui-main-num {
+  font-family: var(--font-display); font-size: clamp(4rem, 8vw, 7rem);
+  font-weight: 900; letter-spacing: -.05em; color: var(--accent);
+  line-height: .9; font-variant-numeric: tabular-nums;
+}
+.ui-main-label { font-size: .62rem; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-dim); margin-top: .5rem; }
+.ui-progress { height: 2px; background: var(--rule); margin-top: 1.5rem; }
+.ui-progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 2s ease; }
+.ui-goal-row { display: flex; justify-content: space-between; font-size: .62rem; color: var(--ink-dim); margin-top: .5rem; }
+.ui-goal-row .done { color: var(--ink); }
+
+/* ─── SPECS GRID ─── */
+.specs-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+  background: var(--rule); border-top: 1px solid var(--rule);
+}
+.spec-box { background: var(--bg-dark-alt); padding: 1.2rem 1rem; }
+.sb-label { font-size: .55rem; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: .5rem; }
+.sb-value { font-family: var(--font-label); font-size: .88rem; font-weight: 700; color: var(--ink); line-height: 1.3; }
+
+/* ─── PHILOSOPHY BLOCK ─── */
+.philosophy {
+  grid-column: 1/-1; margin-top: 2rem;
+  border: 1px solid rgba(220,38,38,.25); padding: 4rem;
+  background: rgba(220,38,38,.15); position: relative;
+}
+.philosophy::before {
+  content: '"'; position: absolute; top: 1rem; left: 2rem;
+  font-family: var(--font-display); font-size: 8rem; font-weight: 900;
+  color: rgba(220,38,38,.15); line-height: 1; user-select: none;
+}
+.philosophy blockquote {
+  font-family: var(--font-display); font-size: clamp(1.4rem, 2.5vw, 2rem);
+  font-weight: 700; font-style: italic; color: var(--ink); line-height: 1.4;
+  letter-spacing: -.02em; position: relative; z-index: 1;
+}
+.philosophy cite {
+  display: block; font-family: var(--font-body); font-size: .62rem;
+  font-style: normal; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--accent); margin-top: 1.5rem;
+}
+
+/* ─── PROJECT PHOTO SLOTS ─── */
+.proj-img-row {
+  display: grid; gap: 2px;
+  background: rgba(220,38,38,.15);
+  margin: 3rem 0;
+}
+.proj-img-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.proj-img-row.cols-2 { grid-template-columns: 2fr 1fr; }
+.proj-img-row.cols-1 { grid-template-columns: 1fr; }
+
+figure.proj-ph {
+  margin: 0; position: relative; overflow: hidden;
+  background: var(--bg-dark-alt);
+  border: 1px dashed rgba(220,38,38,.3);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 200px; cursor: pointer;
+  transition: border-color .3s, background .3s;
+}
+figure.proj-ph:hover { border-color: var(--accent); background: rgba(220,38,38,.1); }
+figure.proj-ph img { width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:block; }
+.ph-body { display:flex;flex-direction:column;align-items:center;gap:.6rem;padding:2rem;text-align:center;position:relative;z-index:1; }
+.ph-icon { font-size:2rem;opacity:.4; }
+.ph-label { font-family:var(--font-label);font-size:.65rem;font-weight:700;letter-spacing:.35em;text-transform:uppercase;color:var(--accent);opacity:.8; }
+.ph-hint  { font-family:var(--font-body);font-size:.55rem;letter-spacing:.15em;color:var(--ink-dim);opacity:.5; }
+figcaption.ph-cap { background:var(--bg-dark-alt);padding:.5rem 1rem;font-family:var(--font-body);font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim);border-top:1px solid var(--rule);text-align:center; }
+figure.proj-ph.tall  { min-height:300px; }
+figure.proj-ph.short { min-height:140px; }
+figure.proj-ph.wide  { min-height:260px; }
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:960px) {
+  .content-grid { grid-template-columns: 1fr; padding: 2rem; }
+  .header-hero { padding: 8rem 2rem 3rem; }
+  .vis-countdown { grid-template-columns: repeat(2,1fr); }
+  .philosophy { padding: 2.5rem 1.5rem; }
+  .proj-img-row.cols-3,.proj-img-row.cols-2 { grid-template-columns:1fr 1fr; }
+}
+@media(max-width:600px) {
+  .proj-img-row.cols-3,.proj-img-row.cols-2 { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+
+<div id="loader">
+  <div class="ld-logo">IA<em>.</em></div>
+  <div class="ld-bar"><div class="ld-fill" id="ld-fill-el"></div></div>
+</div>
+
+<div id="section-dots"></div>
+
+<!-- NAV -->
+<nav class="project-nav">
+  <a href="main.html" class="nav-back">Return to Main OS</a>
+  <div class="nav-badge">SYSTEM: RUNNING</div>
+</nav>
+
+<header class="header-hero rv">
+  <!-- Live countdown badge -->
+  <div class="countdown-badge">
+    <div>
+      <div class="cd-label">Time Remaining</div>
+    </div>
+    <div class="cd-number" id="hdr-days">---</div>
+    <div class="cd-unit">Days</div>
+  </div>
+
+  <div class="h-meta"><span>PRJ_03</span><span>Cross-Platform Productivity System</span></div>
+  <h1 class="h-title">Project <em>1170</em><br>Personal OS</h1>
+  <p class="h-desc">A bespoke, zero-distraction personal operating system anchored by a strict 1095-day countdown — roughly 3 years — to a singular high-stakes personal deadline. Custom-built across Desktop, Web, and Android with a brutalist UI philosophy: no colours, no comfort, only accountability.</p>
+  <div class="h-tags">
+    <span class="h-tag red">Desktop App</span>
+    <span class="h-tag red">Web</span>
+    <span class="h-tag red">Android</span>
+    <span class="h-tag">Brutalist UI</span>
+    <span class="h-tag">Countdown Logic</span>
+    <span class="h-tag">Goal Tracking</span>
+    <span class="h-tag">Python / JS / Kotlin</span>
+  </div>
+</header>
+
+<main>
+<div class="content-grid">
+
+  <!-- LEFT: TEXT -->
+  <div class="text-block rv">
+    <h3>The Philosophy</h3>
+    <p>Productivity systems fail because they are designed to be comfortable. Todo apps have friendly colours, motivational quotes, and satisfying animations. They gamify the experience — which is precisely why they don't work for high-stakes, multi-year goals.</p>
+    <p>Project 1170 is built on a single, brutal truth: <strong>every day that passes is a day permanently subtracted</strong>. The interface does not celebrate you. It does not give you points. It counts down, relentlessly, in monochrome.</p>
+
+    <h3 style="margin-top:3rem;">Architecture: Three Platforms, One Data Core</h3>
+    <ul>
+      <li><strong>Desktop (Python/PyQt6):</strong> The primary environment. A full-screen lock-mode application that launches at system startup, blocking distraction before the workspace is unlocked.</li>
+      <li><strong>Web (Vanilla JS):</strong> A zero-dependency, statically hosted dashboard for cross-device access. No frameworks — brutally minimal load time.</li>
+      <li><strong>Android (Kotlin):</strong> Home screen widget displaying only the day count and current primary objective. No app — just a widget. Maximum presence, minimum friction.</li>
+    </ul>
+  </div>
+
+  <!-- RIGHT: PANELS -->
+  <div class="rv" style="display:flex;flex-direction:column;gap:2.5rem;">
+
+    <!-- Live Countdown -->
+    <div class="panel red-border">
+      <div class="panel-head">
+        <span>1170 Countdown Clock</span>
+        <span class="ph-red">● LIVE</span>
+      </div>
+      <div class="vis-countdown">
+        <div class="cd-cell">
+          <div class="cd-cell-n red" id="cd-days">---</div>
+          <div class="cd-cell-l">Days</div>
+        </div>
+        <div class="cd-cell">
+          <div class="cd-cell-n" id="cd-hours">--</div>
+          <div class="cd-cell-l">Hours</div>
+        </div>
+        <div class="cd-cell">
+          <div class="cd-cell-n" id="cd-mins">--</div>
+          <div class="cd-cell-l">Minutes</div>
+        </div>
+        <div class="cd-cell">
+          <div class="cd-cell-n" id="cd-secs">--</div>
+          <div class="cd-cell-l">Seconds</div>
+        </div>
+      </div>
+      <div class="specs-grid">
+        <div class="spec-box"><div class="sb-label">Total Duration</div><div class="sb-value">1170 Days / ~3 Years</div></div>
+        <div class="spec-box"><div class="sb-label">Platforms</div><div class="sb-value">Desktop · Web · Android</div></div>
+      </div>
+    </div>
+
+    <!-- Platforms -->
+    <div class="panel">
+      <div class="panel-head"><span>Platform Deployment</span><span>Cross-Platform</span></div>
+      <div class="vis-platforms">
+        <div class="platform-row">
+          <div class="plt-icon">🖥️</div>
+          <div>
+            <div class="plt-name">Desktop — Python / PyQt6</div>
+            <div class="plt-desc">Full-screen lock mode, system startup integration, hotkey override</div>
+          </div>
+          <div class="plt-status">ACTIVE</div>
+        </div>
+        <div class="platform-row">
+          <div class="plt-icon">🌐</div>
+          <div>
+            <div class="plt-name">Web — Vanilla JS</div>
+            <div class="plt-desc">Zero-dependency, statically hosted, sub-200ms load</div>
+          </div>
+          <div class="plt-status">DEPLOYED</div>
+        </div>
+        <div class="platform-row">
+          <div class="plt-icon">📱</div>
+          <div>
+            <div class="plt-name">Android — Kotlin Widget</div>
+            <div class="plt-desc">Home screen widget only — no full app, maximum presence</div>
+          </div>
+          <div class="plt-status">RUNNING</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interface Preview — full width -->
+  <div class="panel rv" style="grid-column:1/-1;">
+    <div class="panel-head">
+      <span>UI Preview — Desktop Lock Screen</span>
+      <span class="ph-red">BRUTALIST INTERFACE</span>
+    </div>
+    <div class="vis-interface">
+      <div class="ui-topbar">
+        <div class="ui-title">PROJECT 1170</div>
+        <div class="ui-clock" id="ui-time">--:--:--</div>
+      </div>
+      <div>
+        <div class="ui-main-num" id="ui-days">---</div>
+        <div class="ui-main-label">Days Remaining Until Deadline</div>
+      </div>
+      <div>
+        <div class="ui-progress"><div class="ui-progress-fill" id="ui-prog"></div></div>
+        <div class="ui-goal-row">
+          <span>Day 1 — Start</span>
+          <span class="done" id="ui-pct">--% elapsed</span>
+          <span>Day 1170 — End</span>
+        </div>
+      </div>
+      <div style="margin-top:auto;border-top:1px solid var(--rule);padding-top:1rem;display:flex;justify-content:space-between;">
+        <div style="font-size:.62rem;color:var(--ink-dim);">PRIMARY OBJECTIVE</div>
+        <div style="font-size:.68rem;color:var(--ink);">UET Mechatronics — Final Year Thesis Complete</div>
+      </div>
+    </div>
+    <div class="specs-grid">
+      <div class="spec-box"><div class="sb-label">Design Language</div><div class="sb-value">Digital Brutalism</div></div>
+      <div class="spec-box"><div class="sb-label">Colour Palette</div><div class="sb-value">Black / White / Red only</div></div>
+      <div class="spec-box"><div class="sb-label">Font Stack</div><div class="sb-value">Fraunces + DM Mono</div></div>
+      <div class="spec-box"><div class="sb-label">Distraction Blocking</div><div class="sb-value">Lock-Mode on Startup</div></div>
+    </div>
+  </div>
+
+  <!-- Philosophy quote -->
+  <div class="philosophy rv">
+    <blockquote>
+      "You do not need motivation. You need a countdown you cannot close."
+      <cite>— Ishtiyaq Ahmad, Project 1170 Design Notes</cite>
+    </blockquote>
+  </div>
+
+  <!-- ══ PHOTO GALLERY — brutalist B&W app screenshots ══════════════════════
+       To use real photos: replace .proj-ph body with <img src="…" alt="…">
+  ════════════════════════════════════════════════════════════════════════== -->
+  <!-- Hero full-width: desktop lock screen in action -->
+  <div class="proj-img-row cols-1 rv" style="grid-column:1/-1;margin-top:3rem;">
+    <figure class="proj-ph tall">
+      <div class="ph-body">
+        <div class="ph-icon">🖥️</div>
+        <div class="ph-label">Desktop Lock Screen — Active</div>
+        <div class="ph-hint">desktop_lockscreen.png</div>
+      </div>
+      <figcaption class="ph-cap">Python / PyQt6 — Full-Screen Lock Mode Running at System Boot</figcaption>
+    </figure>
+  </div>
+
+  <!-- 3-across: web dashboard, android widget, data sync output -->
+  <div class="proj-img-row cols-3 rv" style="grid-column:1/-1;margin-top:2px;">
+    <figure class="proj-ph">
+      <div class="ph-body">
+        <div class="ph-icon">🌐</div>
+        <div class="ph-label">Web Dashboard</div>
+        <div class="ph-hint">web_dashboard.png</div>
+      </div>
+      <figcaption class="ph-cap">Vanilla JS — Zero-Dependency Static Version</figcaption>
+    </figure>
+    <figure class="proj-ph">
+      <div class="ph-body">
+        <div class="ph-icon">📱</div>
+        <div class="ph-label">Android Widget</div>
+        <div class="ph-hint">android_widget.jpg</div>
+      </div>
+      <figcaption class="ph-cap">Kotlin — Home Screen Widget, Day Count Only</figcaption>
+    </figure>
+    <figure class="proj-ph">
+      <div class="ph-body">
+        <div class="ph-icon">📁</div>
+        <div class="ph-label">SQLite + JSON Sync</div>
+        <div class="ph-hint">data_sync_terminal.png</div>
+      </div>
+      <figcaption class="ph-cap">Nightly Export → GitHub JSON Endpoint</figcaption>
+    </figure>
+  </div>
+
+  <!-- Bottom text span -->
+  <div class="text-block rv" style="grid-column:1/-1;border-top:1px solid var(--rule);padding-top:3rem;">
+    <h3>Data Persistence &amp; Sync</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;">
+      <p style="margin:0;">All goal data is stored in a local <strong>SQLite database</strong> on the desktop, with a nightly export to a flat JSON file synced via a private GitHub repository. The web and Android versions pull from this JSON endpoint, ensuring all platforms reflect the same state without a cloud dependency or subscription service.</p>
+      <p style="margin:0;">The system enforces a <strong>daily audit</strong>: before the desktop lock-screen can be dismissed, you must log what you completed the previous day. There is no skip button. This creates an unbroken daily accountability record that doubles as a performance journal.</p>
+    </div>
+  </div>
+
+</div><!-- end content-grid -->
+</main>
+
+<!-- Cross-link navigation -->
+<div class="cross-links" style="border-top:1px solid var(--rule);">
+  <a href="main.html#projects" class="cross-link-card" style="background:var(--bg-alt);">
+    <div>
+      <div class="clc-label" style="color:var(--accent);">Back To</div>
+      <div class="clc-title" style="color:var(--ink);">All Projects</div>
+    </div>
+    <div class="clc-arrow left" style="color:var(--ink-dim);">←</div>
+  </a>
+  <a href="project-automation.html" class="cross-link-card" style="text-align:right;flex-direction:row-reverse;background:var(--bg-alt);">
+    <div>
+      <div class="clc-label" style="color:var(--accent);">Next Project</div>
+      <div class="clc-title" style="color:var(--ink);">Data Pipelines</div>
+    </div>
+    <div class="clc-arrow right" style="color:var(--ink-dim);">→</div>
+  </a>
+</div>
+
+<footer class="site-footer">
+  <a href="main.html" class="foot-logo">IA<em>.</em></a>
+  <div class="foot-links">
+    <a href="about.html">About</a>
+    <a href="education.html">Education</a>
+    <a href="stack-hardware.html">Stack</a>
+    <a href="main.html#projects">Projects</a>
+    <a href="main.html#contact">Contact</a>
+  </div>
+  <div class="foot-copy">© <span class="yr"></span> ISHTIYAQ AHMAD. ALL RIGHTS RESERVED.</div>
+</footer>
+
+<script>
+// ─── COUNTDOWN LOGIC ──────────────────────────────
+const deadline = new Date('2028-04-16T00:00:00');
+const start    = new Date('2025-01-01T00:00:00');
+const total    = deadline - start;
+
+function tick() {
+  const now  = new Date();
+  const diff = deadline - now;
+  if (diff <= 0) return;
+
+  const days  = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const mins  = Math.floor((diff % 3600000)  / 60000);
+  const secs  = Math.floor((diff % 60000)    / 1000);
+  const pct   = Math.min(100, ((now - start) / total * 100)).toFixed(1);
+  const fmt   = (n, p=2) => String(n).padStart(p,'0');
+
+  document.getElementById('cd-days').textContent  = fmt(days, 3);
+  document.getElementById('cd-hours').textContent = fmt(hours);
+  document.getElementById('cd-mins').textContent  = fmt(mins);
+  document.getElementById('cd-secs').textContent  = fmt(secs);
+
+  const hd = document.getElementById('hdr-days');
+  if(hd) hd.textContent = fmt(days, 3);
+
+  document.getElementById('ui-days').textContent  = fmt(days, 3);
+  document.getElementById('ui-time').textContent  = now.toTimeString().slice(0,8);
+  document.getElementById('ui-pct').textContent   = pct + '% elapsed';
+  const prog = document.getElementById('ui-prog');
+  if(prog) prog.style.width = pct + '%';
+}
+tick();
+setInterval(tick, 1000);
+</script>
+
+<script src="shared.js"></script>
+</body>
+</html>

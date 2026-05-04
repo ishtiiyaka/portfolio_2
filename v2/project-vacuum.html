@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 01: Robotic Vacuum Diagnostic System — Ishtiyaq Ahmad</title>
+
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="shared.css">
+
+<!-- GSAP + ScrollTrigger -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<style>
+/* ==========================================================================
+   🎨 THEME OVERRIDE: DARK FORENSICS / HARDWARE AUTOPSY
+   Deep charcoal, electric amber, acid green — like a logic analyser
+   ========================================================================== */
+:root {
+  --bg:      #080a07;
+  --bg-alt:  #0d110c;
+  --bg-dark: #080a07;
+  --bg-dark-alt: #111510;
+  --ink:     #d4e8c8;
+  --ink-dim: rgba(212,232,200,0.45);
+  --ink-light: #d4e8c8;
+  --ink-faint: rgba(212,232,200,0.25);
+  --accent:  #f59e0b;
+  --accent-2: #fbbf24;
+  --accent-blue: #22c55e;
+  --rule:    rgba(245,158,11,0.15);
+  --rule-dark: rgba(245,158,11,0.15);
+  --border:  1px solid rgba(245,158,11,0.15);
+  --border-dark: 1px solid rgba(245,158,11,0.15);
+  --green:   #22c55e;
+  --white:   #d4e8c8;
+
+  /* Keep font vars from theme */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body:    'DM Mono', 'Courier New', monospace;
+  --font-label:   'Syne', sans-serif;
+}
+
+/* ─── CIRCUIT GRID BG ─── */
+.circuit-bg {
+  position: fixed; inset: 0; z-index: -1;
+  background-image:
+    linear-gradient(rgba(245,158,11,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,158,11,0.04) 1px, transparent 1px);
+  background-size: 45px 45px;
+}
+.circuit-bg::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245,158,11,.06) 0%, transparent 70%);
+}
+
+/* ─── SCANLINE OVERLAY ─── */
+body::after {
+  content: ''; position: fixed; inset: 0; z-index: 8999; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent, transparent 2px,
+    rgba(0,0,0,.04) 2px, rgba(0,0,0,.04) 4px
+  );
+}
+
+/* ─── CURSOR OVERRIDES (amber crosshair) ─── */
+#cur {
+  width: 3px; height: 16px;
+  background: var(--accent);
+  border-radius: 0;
+  box-shadow: 0 0 8px var(--accent), 0 0 20px rgba(245,158,11,.4);
+  mix-blend-mode: normal;
+}
+#cur::after {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  width: 16px; height: 3px; background: var(--accent);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 8px var(--accent);
+}
+#cur-ring {
+  width: 36px; height: 36px;
+  border: 1px solid rgba(245,158,11,.4);
+  border-radius: 0;
+  mix-blend-mode: normal;
+}
+body.hov #cur { height: 30px; background: #4ade80; }
+body.hov #cur::after { width: 30px; background: #4ade80; }
+body.hov #cur-ring { width: 55px; height: 55px; border-radius: 0; border-color: rgba(74,222,128,.4); }
+
+/* ─── HEADER ─── */
+.header-hero {
+  padding: 11rem 4rem 5rem;
+  max-width: 1400px; margin: 0 auto;
+  border-bottom: 1px solid var(--rule);
+  position: relative;
+}
+.h-meta {
+  font-family: var(--font-label); font-size: .72rem; letter-spacing: .35em;
+  color: var(--accent); text-transform: uppercase; margin-bottom: 2rem;
+  display: flex; gap: 2.5rem; align-items: center;
+}
+.h-meta::before { content: ''; width: 40px; height: 1px; background: var(--accent); }
+.h-title {
+  font-family: var(--font-display); font-size: clamp(3rem, 5.5vw, 5.5rem);
+  font-weight: 900; line-height: .95; letter-spacing: -.03em;
+  margin-bottom: 2.5rem; color: var(--ink);
+}
+.h-title em { font-style: italic; color: var(--accent); }
+.h-desc { font-size: .92rem; line-height: 1.85; color: var(--ink-dim); max-width: 800px; }
+.h-tags { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 2rem; }
+.h-tag {
+  font-size: .58rem; letter-spacing: .15em; text-transform: uppercase;
+  border: 1px solid var(--rule); color: var(--accent); padding: .25rem .7rem;
+}
+
+/* ─── CONTENT GRID ─── */
+.content-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  max-width: 1400px; margin: 0 auto; padding: 4rem; gap: 4rem;
+}
+
+/* ─── TEXT BLOCKS ─── */
+.text-block h3 {
+  font-family: var(--font-label); font-size: 1.1rem; color: var(--accent);
+  text-transform: uppercase; letter-spacing: .1em; margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: .75rem;
+}
+.text-block h3::before { content: '▶'; font-size: .5em; color: #4ade80; }
+.text-block p { font-size: .85rem; line-height: 2.1; color: var(--ink-dim); margin-bottom: 1.5rem; }
+.text-block strong { color: var(--ink); font-weight: 500; }
+.text-block ul { list-style: none; margin-bottom: 1.5rem; }
+.text-block ul li {
+  font-size: .82rem; line-height: 1.9; color: var(--ink-dim); padding: .4rem 0;
+  border-bottom: 1px dashed rgba(245,158,11,.1); display: flex; gap: .75rem;
+}
+.text-block ul li::before { content: '//'; color: var(--accent); flex-shrink: 0; opacity: .6; }
+.text-block ul li strong { color: var(--ink); }
+
+/* ─── PANELS ─── */
+.panel {
+  background: var(--bg-alt); border: 1px solid var(--rule);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.panel-head {
+  background: var(--bg-dark-alt); padding: .8rem 1.2rem;
+  font-size: .6rem; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--ink-dim); display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--rule);
+}
+.panel-head .ph-status { color: #4ade80; }
+
+/* ─── VIS 1: SERIAL PROBE / PORT SCAN ─── */
+.vis-probe { padding: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+.probe-row {
+  display: flex; align-items: center; gap: 1rem; font-size: .65rem;
+  padding: .6rem .8rem; border: 1px solid transparent;
+  transition: border-color .3s, background .3s;
+}
+.probe-row.active { border-color: var(--rule); background: rgba(245,158,11,.04); }
+.probe-row.found { border-color: rgba(34,197,94,.3); background: rgba(34,197,94,.05); }
+.pr-port { color: var(--accent); width: 70px; flex-shrink: 0; }
+.pr-baud { color: var(--ink-dim); width: 70px; }
+.pr-status { margin-left: auto; font-size: .58rem; letter-spacing: .15em; text-transform: uppercase; }
+.pr-status.scanning { color: var(--accent); animation: blink 1s step-end infinite; }
+.pr-status.found-s { color: #4ade80; }
+.pr-status.idle { color: var(--ink-dim); }
+.pr-bar { flex: 1; height: 2px; background: rgba(255,255,255,.04); }
+.pr-bar-fill { height: 100%; background: var(--accent); animation: probe-scan 2s ease-in-out infinite; }
+.probe-row.found .pr-bar-fill { background: #4ade80; animation: none; width: 100%; }
+
+@keyframes probe-scan { 0%,100%{width:0%} 50%{width:85%} }
+
+/* ─── VIS 2: LIVE UART HEX DUMP ─── */
+.vis-uart {
+  padding: 1.2rem; font-family: var(--font-body); font-size: .68rem;
+  line-height: 1.6; height: 220px; overflow: hidden; position: relative;
+}
+.uart-stream { display: flex; flex-direction: column; gap: .35rem; animation: streamUp 3s linear infinite; }
+.uart-row { display: flex; gap: 1.2rem; align-items: baseline; }
+.ur-ts { color: rgba(212,232,200,.25); width: 50px; flex-shrink: 0; font-size: .58rem; }
+.ur-hex { color: #fbbf24; letter-spacing: .08em; flex: 1; }
+.ur-hex .hl { background: rgba(34,197,94,.25); color: #4ade80; padding: 0 3px; }
+.ur-hex .hl2 { background: rgba(245,158,11,.2); color: var(--accent); padding: 0 3px; }
+.ur-ascii { color: rgba(212,232,200,.25); font-size: .6rem; white-space: nowrap; }
+@keyframes streamUp { 0%{transform:translateY(0)} 100%{transform:translateY(-50%)} }
+
+/* ─── VIS 3: WAVEFORM DECODE ─── */
+.vis-wave { padding: 1.5rem; height: 160px; position: relative; }
+.vis-wave svg { width: 100%; height: 100%; overflow: visible; }
+.wave-line { stroke: var(--accent); stroke-width: 1.5; fill: none; }
+.wave-label { font-family: var(--font-body); font-size: .55rem; fill: var(--ink-dim); }
+.wave-bit { font-size: .48rem; fill: #4ade80; }
+.wave-mark { stroke: rgba(74,222,128,.4); stroke-width: 1; stroke-dasharray: 2,3; }
+
+/* ─── SPECS GRID ─── */
+.specs-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+  background: var(--rule); border-top: 1px solid var(--rule);
+}
+.spec-box { background: var(--bg-dark-alt); padding: 1.2rem 1rem; }
+.sb-label { font-size: .55rem; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: .5rem; }
+.sb-value { font-family: var(--font-label); font-size: .88rem; font-weight: 700; color: var(--ink); line-height: 1.3; }
+
+/* ─── BOTTOM FULL SPAN ─── */
+.full-span {
+  grid-column: 1/-1; margin-top: 2rem;
+  border-top: 1px solid var(--rule); padding-top: 4rem;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4rem;
+}
+
+/* ─── ARCHITECTURE DIAGRAM ─── */
+.arch-panel { padding: 2rem; }
+.arch-nodes { display: flex; flex-direction: column; gap: 1.5rem; position: relative; }
+.arch-node {
+  border: 1px solid var(--rule); padding: 1rem 1.5rem;
+  display: flex; align-items: center; gap: 1.5rem;
+  background: var(--bg-dark-alt); position: relative;
+  transition: border-color .3s, box-shadow .3s;
+}
+.arch-node:hover { border-color: var(--accent); box-shadow: 0 0 20px rgba(245,158,11,.1); }
+.an-icon { font-size: 1.4rem; width: 36px; text-align: center; flex-shrink: 0; }
+.an-info { flex: 1; }
+.an-title { font-family: var(--font-label); font-size: .85rem; font-weight: 700; color: var(--ink); }
+.an-desc { font-size: .6rem; color: var(--ink-dim); margin-top: .25rem; letter-spacing: .05em; }
+.an-status { font-size: .55rem; letter-spacing: .18em; text-transform: uppercase; padding: .2rem .6rem; border: 1px solid; }
+.an-status.ok { color: #4ade80; border-color: rgba(74,222,128,.3); }
+.an-status.sniff { color: var(--accent); border-color: rgba(245,158,11,.3); }
+.arch-connector {
+  width: 2px; height: 20px; background: linear-gradient(to bottom, var(--accent), #4ade80);
+  margin-left: 53px; opacity: .4;
+}
+
+/* ─── PROJECT PHOTO SLOTS ─── */
+/* Replace .proj-ph content with <img src="your-photo.jpg" alt="..."> when ready */
+.proj-img-row {
+  display: grid;
+  gap: 2px;
+  background: var(--rule);
+  margin: 3rem 0;
+}
+.proj-img-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.proj-img-row.cols-2 { grid-template-columns: 2fr 1fr; }
+.proj-img-row.cols-1 { grid-template-columns: 1fr; }
+
+figure.proj-ph {
+  margin: 0;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-dark-alt);
+  border: 1px dashed rgba(245,158,11,.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  cursor: pointer;
+  transition: border-color .3s, background .3s;
+}
+figure.proj-ph:hover { border-color: var(--accent); background: rgba(245,158,11,.04); }
+figure.proj-ph img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  position: absolute; inset: 0;
+  display: block;
+}
+.ph-body {
+  display: flex; flex-direction: column; align-items: center;
+  gap: .6rem; padding: 2rem; text-align: center; position: relative; z-index: 1;
+}
+.ph-icon { font-size: 2rem; opacity: .4; }
+.ph-label {
+  font-family: var(--font-label); font-size: .65rem; font-weight: 700;
+  letter-spacing: .35em; text-transform: uppercase; color: var(--accent); opacity: .7;
+}
+.ph-hint {
+  font-family: var(--font-body); font-size: .55rem; letter-spacing: .15em;
+  color: var(--ink-dim); opacity: .5;
+}
+figcaption.ph-cap {
+  background: var(--bg-dark-alt); padding: .5rem 1rem;
+  font-family: var(--font-body); font-size: .55rem; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--ink-dim);
+  border-top: 1px solid var(--rule);
+  text-align: center;
+}
+figure.proj-ph.tall  { min-height: 300px; }
+figure.proj-ph.short { min-height: 140px; }
+figure.proj-ph.wide  { min-height: 260px; }
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:960px) {
+  .content-grid { grid-template-columns: 1fr; padding: 2rem; }
+  .full-span { grid-template-columns: 1fr; }
+  .header-hero { padding: 8rem 2rem 3rem; }
+  .proj-img-row.cols-3, .proj-img-row.cols-2 { grid-template-columns: 1fr 1fr; }
+}
+@media(max-width:600px) {
+  .proj-img-row.cols-3, .proj-img-row.cols-2 { grid-template-columns: 1fr; }
+}
+
+/* ─── PROJECT NAV OVERRIDE (dark bg) ─── */
+.project-nav { background: rgba(8,10,7,.85); backdrop-filter: blur(10px); border-bottom: 1px solid var(--rule); }
+.nav-back { color: var(--accent); }
+.nav-back:hover { color: var(--ink); }
+.nav-badge { color: #4ade80; }
+.nav-badge::before { content: ''; width: 6px; height: 6px; background: #4ade80; border-radius: 50%; animation: pulse 2s infinite; display: inline-block; margin-right: .5rem; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div class="circuit-bg"></div>
+
+<div id="loader">
+  <div class="ld-logo">IA<em>.</em></div>
+  <div class="ld-bar"><div class="ld-fill" id="ld-fill-el"></div></div>
+</div>
+
+<div id="section-dots"></div>
+
+<!-- NAV -->
+<nav class="project-nav">
+  <a href="main.html" class="nav-back">Return to Main OS</a>
+  <div class="nav-badge">PROBE: ACTIVE</div>
+</nav>
+
+<header class="header-hero rv">
+  <div class="h-meta"><span>PRJ_01</span><span>Hardware Reverse-Engineering</span></div>
+  <h1 class="h-title">Robotic Vacuum<br><em>Diagnostic System</em></h1>
+  <p class="h-desc">A complete hardware and software forensic ecosystem built to interface directly with undocumented robotic vacuum mainboards. Sniffs UART and serial data streams, reverse-engineers proprietary command packets, and injects custom payloads to achieve full system control without manufacturer documentation.</p>
+  <div class="h-tags">
+    <span class="h-tag">UART</span>
+    <span class="h-tag">Serial Protocols</span>
+    <span class="h-tag">Hex Analysis</span>
+    <span class="h-tag">CRC Decoding</span>
+    <span class="h-tag">Logic Analyser</span>
+    <span class="h-tag">Packet Injection</span>
+    <span class="h-tag">Python</span>
+  </div>
+</header>
+
+<main>
+<div class="content-grid">
+
+  <!-- LEFT: TEXT -->
+  <div class="text-block rv">
+    <h3>The Problem: No Documentation Exists</h3>
+    <p>Chinese robotic vacuum manufacturers ship units with custom mainboards running undocumented proprietary firmware. There is no public API, no open serial protocol, and no diagnostic port exposed to the user. The hardware is a sealed black box.</p>
+    <p>To build a proper diagnostic tool, I had to create the documentation myself — by reading the raw electrical signals directly off the board using a <strong>Saleae Logic Analyzer</strong>, physically probing unlabeled test points until I identified active UART buses.</p>
+
+    <h3 style="margin-top:3rem;">Phase 1 — Bus Discovery</h3>
+    <ul>
+      <li><strong>Physical Probing:</strong> Using a multimeter and scope, I identified 3.3V UART activity between the mainboard MCU and the sensor module.</li>
+      <li><strong>Baud Rate Cracking:</strong> By capturing the raw signal timing and calculating pulse widths, I deduced a non-standard baud rate of 115200 bps, 8N1.</li>
+      <li><strong>Differential Analysis:</strong> Captured 2000+ packet samples during normal operation to identify repeated preamble bytes (0x5A 0xA5) marking packet boundaries.</li>
+    </ul>
+  </div>
+
+  <!-- RIGHT: PANELS -->
+  <div class="rv" style="display:flex;flex-direction:column;gap:2.5rem;">
+
+    <!-- Panel: Port Scanner -->
+    <div class="panel">
+      <div class="panel-head">
+        <span>Serial Port Discovery</span>
+        <span class="ph-status">● SCANNING</span>
+      </div>
+      <div class="vis-probe">
+        <div class="probe-row found">
+          <span class="pr-port">/dev/ttyS0</span>
+          <span class="pr-baud">115200</span>
+          <div class="pr-bar"><div class="pr-bar-fill"></div></div>
+          <span class="pr-status found-s">LOCKED</span>
+        </div>
+        <div class="probe-row active">
+          <span class="pr-port">/dev/ttyUSB0</span>
+          <span class="pr-baud">9600</span>
+          <div class="pr-bar"><div class="pr-bar-fill"></div></div>
+          <span class="pr-status scanning">PROBING</span>
+        </div>
+        <div class="probe-row">
+          <span class="pr-port">/dev/ttyUSB1</span>
+          <span class="pr-baud">256000</span>
+          <div class="pr-bar"><div class="pr-bar-fill"></div></div>
+          <span class="pr-status idle">IDLE</span>
+        </div>
+        <div class="probe-row">
+          <span class="pr-port">/dev/ttyACM0</span>
+          <span class="pr-baud">38400</span>
+          <div class="pr-bar"><div class="pr-bar-fill"></div></div>
+          <span class="pr-status idle">IDLE</span>
+        </div>
+      </div>
+      <div class="specs-grid">
+        <div class="spec-box"><div class="sb-label">Bus Identified</div><div class="sb-value">UART / 8N1</div></div>
+        <div class="spec-box"><div class="sb-label">Baud Rate</div><div class="sb-value">115200 bps</div></div>
+      </div>
+    </div>
+
+    <!-- Panel: Waveform -->
+    <div class="panel">
+      <div class="panel-head">
+        <span>UART Waveform Decode</span>
+        <span style="color:var(--accent);">CH1: TX LINE</span>
+      </div>
+      <div class="vis-wave">
+        <svg viewBox="0 0 400 80">
+          <line x1="0" y1="65" x2="400" y2="65" stroke="rgba(212,232,200,.1)" stroke-width="1"/>
+          <polyline class="wave-line" points="0,10 30,10"/>
+          <polyline class="wave-line" points="30,10 30,60 50,60"/>
+          <polyline class="wave-line" points="50,60 50,10 70,10"/>
+          <polyline class="wave-line" points="70,10 70,60 90,60"/>
+          <polyline class="wave-line" points="90,60 90,10 110,10"/>
+          <polyline class="wave-line" points="110,10 130,10"/>
+          <polyline class="wave-line" points="130,10 130,60 150,60"/>
+          <polyline class="wave-line" points="150,60 150,10 170,10"/>
+          <polyline class="wave-line" points="170,10 170,60 190,60"/>
+          <polyline class="wave-line" points="190,60 190,10 210,10"/>
+          <polyline class="wave-line" points="210,10 240,10"/>
+          <polyline class="wave-line" points="240,10 240,60 260,60 260,10 280,10 280,60 300,60 300,10 320,10 320,60 340,60 340,10 380,10"/>
+          <text class="wave-label" x="32" y="78">S</text>
+          <text class="wave-bit" x="52" y="24">1</text>
+          <text class="wave-bit" x="72" y="78">0</text>
+          <text class="wave-bit" x="92" y="24">1</text>
+          <text class="wave-bit" x="112" y="24">1</text>
+          <text class="wave-bit" x="132" y="78">0</text>
+          <text class="wave-bit" x="152" y="24">1</text>
+          <text class="wave-bit" x="172" y="78">0</text>
+          <text class="wave-bit" x="192" y="24">1</text>
+          <text class="wave-label" x="212" y="24">STOP</text>
+          <line x1="30" y1="0" x2="30" y2="65" class="wave-mark"/>
+          <line x1="210" y1="0" x2="210" y2="65" class="wave-mark"/>
+        </svg>
+      </div>
+      <div class="specs-grid">
+        <div class="spec-box"><div class="sb-label">Byte Captured</div><div class="sb-value" style="color:var(--accent);">0x5A — Preamble</div></div>
+        <div class="spec-box"><div class="sb-label">Bit Timing</div><div class="sb-value">8.68µs / bit</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM FULL-SPAN -->
+  <div class="full-span">
+    <!-- Architecture -->
+    <div class="text-block rv">
+      <h3>Phase 2 — Packet Deconstruction</h3>
+      <p>With the bus confirmed, every byte stream was captured during known operations (fan on, navigation start, dock command). By comparing hundreds of captures against corresponding behaviours, I built a packet-map.</p>
+      <p>The proprietary protocol uses a <strong>fixed-header framing scheme</strong>: preamble (0x5A 0xA5), a 1-byte command ID, a 1-byte payload length, N payload bytes, and a trailing <strong>custom CRC-8 checksum</strong> computed against the payload bytes only. I reverse-engineered the CRC polynomial by trial and error against captured packets.</p>
+      <ul>
+        <li><strong>Payload Injection:</strong> A custom Python bridge (PySerial) rebuilds packets with modified command bytes and injects them onto the bus, overriding vacuum behaviour in real-time.</li>
+        <li><strong>Live Decoder GUI:</strong> A Python/Tkinter interface decodes incoming hex streams into human-readable command labels, timestamps, and status indicators.</li>
+        <li><strong>Full Packet Map:</strong> Documented 24 unique command IDs covering motor control, sensor polling, error states, and map transmission payloads.</li>
+      </ul>
+    </div>
+
+    <!-- Architecture diagram -->
+    <div class="panel rv">
+      <div class="panel-head"><span>System Architecture</span><span style="color:var(--accent);">MITM Bridge</span></div>
+      <div class="arch-panel">
+        <div class="arch-nodes">
+          <div class="arch-node">
+            <div class="an-icon">🤖</div>
+            <div class="an-info">
+              <div class="an-title">Vacuum Mainboard MCU</div>
+              <div class="an-desc">Proprietary Allwinner SoC / undocumented firmware</div>
+            </div>
+            <div class="an-status ok">SOURCE</div>
+          </div>
+          <div class="arch-connector"></div>
+          <div class="arch-node">
+            <div class="an-icon">🔬</div>
+            <div class="an-info">
+              <div class="an-title">Saleae Logic Analyser</div>
+              <div class="an-desc">Passive tap — 24MHz capture, 8 channels</div>
+            </div>
+            <div class="an-status sniff">SNIFFING</div>
+          </div>
+          <div class="arch-connector"></div>
+          <div class="arch-node">
+            <div class="an-icon">💻</div>
+            <div class="an-info">
+              <div class="an-title">Python Diagnostic Host</div>
+              <div class="an-desc">PySerial bridge + Tkinter decoder GUI</div>
+            </div>
+            <div class="an-status ok">INJECTING</div>
+          </div>
+        </div>
+      </div>
+      <div class="specs-grid">
+        <div class="spec-box"><div class="sb-label">Commands Mapped</div><div class="sb-value">24 unique IDs</div></div>
+        <div class="spec-box"><div class="sb-label">Checksum</div><div class="sb-value">CRC-8 (Custom Poly)</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PHOTO GALLERY — 3-across hardware setup strip ══════════════════════
+       To use real photos: replace each <figure class="proj-ph"> body with
+       <img src="your-photo.jpg" alt="description">  and remove .ph-body
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <div class="proj-img-row cols-3 rv" style="grid-column:1/-1;margin-top:3rem;">
+    <figure class="proj-ph tall">
+      <div class="ph-body">
+        <div class="ph-icon">🤖</div>
+        <div class="ph-label">Vacuum Mainboard</div>
+        <div class="ph-hint">board_top.jpg</div>
+      </div>
+      <figcaption class="ph-cap">Mainboard Top-Side — Allwinner SoC Visible</figcaption>
+    </figure>
+    <figure class="proj-ph tall">
+      <div class="ph-body">
+        <div class="ph-icon">🔬</div>
+        <div class="ph-label">Logic Analyser Setup</div>
+        <div class="ph-hint">saleae_probe.jpg</div>
+      </div>
+      <figcaption class="ph-cap">Saleae Logic 8 — Test Points Tapped</figcaption>
+    </figure>
+    <figure class="proj-ph tall">
+      <div class="ph-body">
+        <div class="ph-icon">🔌</div>
+        <div class="ph-label">UART Tap Points</div>
+        <div class="ph-hint">uart_taps.jpg</div>
+      </div>
+      <figcaption class="ph-cap">TX/RX Lines — 115200 bps Identified</figcaption>
+    </figure>
+  </div>
+
+  <!-- 2-col: decoder GUI + Saleae waveform screenshot -->
+  <div class="proj-img-row cols-2 rv" style="grid-column:1/-1;margin-top:2px;">
+    <figure class="proj-ph wide">
+      <div class="ph-body">
+        <div class="ph-icon">💻</div>
+        <div class="ph-label">Decoder GUI — Live</div>
+        <div class="ph-hint">decoder_gui_screenshot.png</div>
+      </div>
+      <figcaption class="ph-cap">Python / Tkinter Live Decoder Interface</figcaption>
+    </figure>
+    <figure class="proj-ph wide">
+      <div class="ph-body">
+        <div class="ph-icon">📊</div>
+        <div class="ph-label">Saleae Capture View</div>
+        <div class="ph-hint">saleae_capture.png</div>
+      </div>
+      <figcaption class="ph-cap">Logic Analyser — 24 MHz Waveform</figcaption>
+    </figure>
+  </div>
+
+  <!-- UART STREAM PANEL — full span -->
+  <div class="panel rv" style="grid-column:1/-1;margin-top:2rem;">
+    <div class="panel-head">
+      <span>Live RX Buffer — Decoded Stream</span>
+      <span class="ph-status">● LIVE CAPTURE @ 115200 bps</span>
+    </div>
+    <div class="vis-uart">
+      <div class="uart-stream">
+        <div class="uart-row"><span class="ur-ts">12:04:01</span><span class="ur-hex"><span class="hl2">5A A5</span> <span class="hl">0C</span> 06 00 00 FF FF 00 <span class="hl">B2</span></span><span class="ur-ascii">Z ¥ . . . . . . .</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:01</span><span class="ur-hex"><span class="hl2">5A A5</span> <span class="hl">11</span> 02 44 1B <span class="hl">C7</span></span><span class="ur-ascii">Z ¥ . . D . Ç</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:02</span><span class="ur-hex"><span class="hl2">5A A5</span> 04 <span class="hl">03</span> 00 00 6E F1</span><span class="ur-ascii">Z ¥ . . . . n ñ</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:02</span><span class="ur-hex"><span class="hl2">5A A5</span> <span class="hl">0C</span> 06 00 00 00 01 00 <span class="hl">51</span></span><span class="ur-ascii">Z ¥ . . . . . Q</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:03</span><span class="ur-hex"><span class="hl2">5A A5</span> <span class="hl">21</span> 08 FF 00 12 00 00 A1 2C <span class="hl">9E</span></span><span class="ur-ascii">Z ¥ ! . . . . . , ž</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:03</span><span class="ur-hex"><span class="hl2">5A A5</span> 04 <span class="hl">03</span> 00 00 6E F1</span><span class="ur-ascii">Z ¥ . . . . n ñ</span></div>
+        <!-- duplicated for scroll -->
+        <div class="uart-row"><span class="ur-ts">12:04:04</span><span class="ur-hex"><span class="hl2">5A A5</span> <span class="hl">0C</span> 06 00 00 FF FF 00 <span class="hl">B2</span></span><span class="ur-ascii">Z ¥ . . . . . . .</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:04</span><span class="ur-hex"><span class="hl2">5A A5</span> <span class="hl">11</span> 02 44 1B <span class="hl">C7</span></span><span class="ur-ascii">Z ¥ . . D . Ç</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:05</span><span class="ur-hex"><span class="hl2">5A A5</span> 04 <span class="hl">03</span> 00 00 6E F1</span><span class="ur-ascii">Z ¥ . . . . n ñ</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:05</span><span class="ur-hex"><span class="hl2">5A A5</span> <span class="hl">21</span> 08 FF 00 12 00 00 A1 2C <span class="hl">9E</span></span><span class="ur-ascii">Z ¥ ! . . . . . , ž</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:06</span><span class="ur-hex"><span class="hl2">5A A5</span> <span class="hl">0C</span> 06 00 00 00 01 00 <span class="hl">51</span></span><span class="ur-ascii">Z ¥ . . . . . Q</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:06</span><span class="ur-hex"><span class="hl2">5A A5</span> 04 <span class="hl">03</span> 00 00 6E F1</span><span class="ur-ascii">Z ¥ . . . . n ñ</span></div>
+      </div>
+    </div>
+    <div class="specs-grid">
+      <div class="spec-box"><div class="sb-label">Preamble Bytes</div><div class="sb-value" style="color:var(--accent);">0x5A 0xA5 (Highlighted)</div></div>
+      <div class="spec-box"><div class="sb-label">Command ID</div><div class="sb-value" style="color:#4ade80;">3rd Byte (Green)</div></div>
+      <div class="spec-box"><div class="sb-label">Packets/Second</div><div class="sb-value">~18 Hz average</div></div>
+      <div class="spec-box"><div class="sb-label">Capture Tool</div><div class="sb-value">PySerial + Saleae</div></div>
+    </div>
+  </div>
+
+</div><!-- end content-grid -->
+</main>
+
+<!-- Cross-link navigation -->
+<div class="cross-links" style="border-top:1px solid var(--rule);">
+  <a href="main.html#projects" class="cross-link-card" style="background:var(--bg-alt);">
+    <div>
+      <div class="clc-label" style="color:var(--accent);">Back To</div>
+      <div class="clc-title" style="color:var(--ink);">All Projects</div>
+    </div>
+    <div class="clc-arrow left" style="color:var(--ink-dim);">←</div>
+  </a>
+  <a href="project-bcm.html" class="cross-link-card" style="text-align:right;flex-direction:row-reverse;background:var(--bg-alt);">
+    <div>
+      <div class="clc-label" style="color:var(--accent);">Next Project</div>
+      <div class="clc-title" style="color:var(--ink);">Custom BCM</div>
+    </div>
+    <div class="clc-arrow right" style="color:var(--ink-dim);">→</div>
+  </a>
+</div>
+
+<footer class="site-footer">
+  <a href="main.html" class="foot-logo">IA<em>.</em></a>
+  <div class="foot-links">
+    <a href="about.html">About</a>
+    <a href="education.html">Education</a>
+    <a href="stack-hardware.html">Stack</a>
+    <a href="main.html#projects">Projects</a>
+    <a href="main.html#contact">Contact</a>
+  </div>
+  <div class="foot-copy">© <span class="yr"></span> ISHTIYAQ AHMAD. ALL RIGHTS RESERVED.</div>
+</footer>
+
+<script src="shared.js"></script>
+</body>
+</html>

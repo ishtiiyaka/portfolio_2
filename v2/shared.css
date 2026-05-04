@@ -1,0 +1,1533 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SHARED.CSS — Components reused across all pages
+   ───────────────────────────────────────────────────────────────────────────
+   Contains: Reset, Google Fonts, Cursor, Noise grain, Navigation, Footer,
+   Buttons, Section labels, Cross-link cards, Reveal animations,
+   Status pills, Photo frame, Project-page nav bar, Page header hero,
+   Data panel base styles.
+
+   DO NOT edit layout/content specifics here.
+   For colour tweaks → edit theme.css variables.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── GOOGLE FONTS ──────────────────────────────────────────────────────────
+   Update this URL if you change fonts in theme.css.
+   Generator: https://fonts.google.com
+─────────────────────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100;0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,700&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@400;700;800&display=swap');
+
+
+/* ─── RESET ─────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  cursor: none;
+}
+img { display: block; max-width: 100%; }
+a  { cursor: none; }
+
+
+/* ─── NOISE GRAIN OVERLAY ───────────────────────────────────────────────────
+   Subtle texture layered over the whole page.
+   Remove body::before to disable. Adjust opacity for more/less grain.
+─────────────────────────────────────────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 9000; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.032;
+}
+
+
+/* ─── CUSTOM CURSOR ─────────────────────────────────────────────────────────
+   Requires: <div id="cur"></div> and <div id="cur-ring"></div> in HTML.
+   Animated in shared.js initCursor(). Remove both divs + this block to use
+   the default browser cursor.
+─────────────────────────────────────────────────────────────────────────── */
+#cur {
+  position: fixed; z-index: 9999; pointer-events: none;
+  width: 10px; height: 10px;
+  background: var(--accent);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: multiply;
+  transition: width var(--transition), height var(--transition), border-radius var(--transition);
+}
+#cur-ring {
+  position: fixed; z-index: 9998; pointer-events: none;
+  width: 42px; height: 42px;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: all var(--transition-slow);
+  mix-blend-mode: multiply;
+}
+/* Grows when hovering an interactive element */
+body.hov #cur  { width: 20px; height: 20px; }
+
+
+/* ─── LOADER ────────────────────────────────────────────────────────────────
+   Requires:
+     <div id="loader">
+       <div class="ld-logo">IA<em>.</em></div>
+       <div class="ld-bar"><div class="ld-fill" id="ld-fill-el"></div></div>
+       <div class="ld-info" id="ld-pct-el">Loading...</div>
+     </div>
+   Controlled by shared.js initLoader().
+─────────────────────────────────────────────────────────────────────────── */
+#loader {
+  position: fixed; inset: 0; z-index: 9990;
+  background: var(--bg-dark);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 2rem;
+}
+.ld-logo {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8vw, 7rem);
+  font-weight: 900; color: var(--ink-light);
+  letter-spacing: -0.04em; line-height: 1;
+}
+.ld-logo em { font-style: italic; color: var(--accent-2); }
+.ld-bar {
+  width: min(340px, 80vw); height: 1px;
+  background: rgba(242, 237, 228, 0.12); overflow: hidden;
+}
+.ld-fill {
+  height: 100%; background: var(--accent-2);
+  width: 0; transition: width 0.06s linear;
+}
+.ld-info {
+  font-size: var(--text-micro); letter-spacing: 0.25em;
+  color: rgba(242, 237, 228, 0.3);
+}
+
+
+/* ─── NAVIGATION — MAIN (multi-page site) ───────────────────────────────────
+   Solid frosted-glass bar used on About, Stack, Project detail pages.
+   Active page link: add class="active" on the <a> tag.
+─────────────────────────────────────────────────────────────────────────── */
+.main-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 1.1rem 4rem;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(242, 237, 228, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: var(--border);
+  transition: all var(--transition);
+}
+
+/* Transparent hero variant — add class "transparent" to .main-nav */
+.main-nav.transparent {
+  background: transparent;
+  border-bottom-color: transparent;
+  backdrop-filter: none;
+}
+.main-nav.transparent.scrolled {
+  background: rgba(242, 237, 228, 0.92);
+  border-bottom-color: var(--rule);
+  backdrop-filter: blur(16px);
+}
+
+/* Dark bg variant — add class "dark" to .main-nav */
+.main-nav.dark {
+  background: rgba(15, 14, 12, 0.92);
+  border-bottom-color: var(--rule-dark);
+}
+
+.nav-logo {
+  font-family: var(--font-display);
+  font-size: 1.1rem; font-weight: 900;
+  color: var(--ink); letter-spacing: -0.02em;
+  text-decoration: none;
+  transition: opacity var(--transition);
+}
+.nav-logo:hover { opacity: 0.7; }
+.main-nav.dark .nav-logo { color: var(--ink-light); }
+
+.nav-links { display: flex; gap: 3rem; list-style: none; }
+.nav-links a {
+  font-family: var(--font-body);
+  font-size: var(--text-micro);
+  color: var(--ink-dim); text-decoration: none;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  transition: color var(--transition);
+  position: relative;
+}
+.nav-links a::after {
+  content: ''; position: absolute; bottom: -4px; left: 0;
+  width: 0; height: 1px; background: var(--accent);
+  transition: width var(--transition);
+}
+.nav-links a:hover::after,
+.nav-links a.active::after { width: 100%; }
+.main-nav.dark .nav-links a  { color: rgba(242, 237, 228, 0.4); }
+.nav-links a:hover,
+.nav-links a.active           { color: var(--accent); }
+.main-nav.dark .nav-links a:hover,
+.main-nav.dark .nav-links a.active { color: var(--accent-2); }
+.main-nav.dark .nav-links a::after { background: var(--accent-2); }
+
+
+/* ─── NAVIGATION — PROJECT/STACK BACK LINK ───────────────────────────────────
+   Minimal top bar used on individual project and stack detail pages.
+   HTML:
+     <nav class="project-nav">
+       <a href="main.html" class="nav-back">← Return to Main OS</a>
+       <div class="nav-badge">STATUS TEXT</div>
+     </nav>
+─────────────────────────────────────────────────────────────────────────── */
+.project-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 1.5rem 4rem;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.nav-back {
+  font-family: var(--font-body);
+  font-size: var(--text-micro);
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-dim); text-decoration: none;
+  transition: color var(--transition), transform var(--transition);
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.nav-back::before {
+  content: ''; width: 22px; height: 1px;
+  background: currentColor;
+  transition: width var(--transition);
+}
+.nav-back:hover { color: var(--accent); transform: translateX(-4px); }
+.nav-back:hover::before { width: 34px; }
+.nav-badge {
+  font-size: 0.55rem; letter-spacing: 0.28em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+
+
+/* ─── PAGE HEADER HERO ───────────────────────────────────────────────────────
+   Shared header block for project and stack detail pages.
+   HTML:
+     <header class="page-hero rv">
+       <div class="ph-meta"><span>PRJ_01</span><span>Category</span></div>
+       <h1 class="ph-title">Title<br><em>Subtitle</em></h1>
+       <p class="ph-desc">Description text</p>
+       <div class="ph-tags">
+         <span class="ph-tag">Tag</span>
+       </div>
+     </header>
+─────────────────────────────────────────────────────────────────────────── */
+.page-hero {
+  padding: var(--page-header-pad);
+  max-width: var(--max-content); margin: 0 auto;
+  border-bottom: var(--border);
+}
+.ph-meta {
+  font-family: var(--font-label);
+  font-size: 0.72rem; letter-spacing: 0.35em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 2rem;
+  display: flex; gap: 2rem; align-items: center;
+}
+.ph-meta::before { content: ''; width: 36px; height: 1px; background: var(--accent); }
+.ph-title {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 5.5vw, 5.5rem);
+  font-weight: 900; line-height: 0.95; letter-spacing: -0.03em;
+  margin-bottom: 2.5rem; color: var(--ink);
+}
+.ph-title em { font-style: italic; color: var(--accent); }
+.ph-desc {
+  font-size: 0.92rem; line-height: 1.85;
+  color: var(--ink-dim); max-width: 820px;
+}
+.ph-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 2rem; }
+.ph-tag {
+  font-size: var(--text-micro); letter-spacing: 0.15em; text-transform: uppercase;
+  border: var(--border); color: var(--ink-dim); padding: 0.25rem 0.7rem;
+  transition: border-color var(--transition), color var(--transition);
+}
+.ph-tag:hover { border-color: var(--accent); color: var(--accent); }
+.ph-tag.accent { border-color: rgba(181,101,29,.35); color: var(--accent); }
+
+
+/* ─── DATA PANEL ─────────────────────────────────────────────────────────────
+   Reusable data visualisation card used on project and stack pages.
+   HTML:
+     <div class="data-panel">
+       <div class="dp-head"><span>Title</span><span>Status</span></div>
+       ... panel content ...
+       <div class="specs-grid">
+         <div class="spec-box"><div class="sb-label">Label</div><div class="sb-value">Value</div></div>
+       </div>
+     </div>
+─────────────────────────────────────────────────────────────────────────── */
+.data-panel {
+  background: var(--bg-dark-alt); border: var(--border-dark);
+  display: flex; flex-direction: column; overflow: hidden;
+  position: relative;
+  transition: box-shadow var(--transition);
+}
+.data-panel:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+.dp-head {
+  background: var(--bg-dark); padding: 0.8rem 1.2rem;
+  font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-dim); display: flex; justify-content: space-between; align-items: center;
+  border-bottom: var(--border-dark);
+}
+.dp-head .dp-live { color: var(--green); }
+.dp-head .dp-accent { color: var(--accent-2); }
+
+/* Specs sub-grid inside panels */
+.specs-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+  background: var(--rule-dark); border-top: var(--border-dark);
+}
+.spec-box { background: var(--bg-dark); padding: 1.2rem 1rem; }
+.sb-label {
+  font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-dim); margin-bottom: 0.5rem;
+}
+.sb-value {
+  font-family: var(--font-label);
+  font-size: 0.88rem; font-weight: 700;
+  color: var(--ink-light); line-height: 1.3;
+}
+
+
+/* ─── FOOTER ─────────────────────────────────────────────────────────────────
+   Place at the bottom of every multi-page site page.
+─────────────────────────────────────────────────────────────────────────── */
+.site-footer {
+  background: var(--bg-dark-alt);
+  padding: 2.5rem 5rem;
+  display: flex; justify-content: space-between; align-items: center;
+  border-top: var(--border-dark);
+}
+.site-footer .foot-logo {
+  font-family: var(--font-display);
+  font-size: 1.1rem; font-weight: 900;
+  color: var(--ink-light); letter-spacing: -0.02em;
+  text-decoration: none;
+}
+.site-footer .foot-logo em  { font-style: italic; color: var(--accent-2); }
+.site-footer .foot-links    { display: flex; gap: 2.5rem; }
+.site-footer .foot-links a  {
+  font-size: var(--text-xsmall); letter-spacing: 0.15em;
+  color: rgba(242, 237, 228, 0.25); text-decoration: none;
+  text-transform: uppercase; transition: color var(--transition);
+}
+.site-footer .foot-links a:hover { color: var(--accent-2); }
+.site-footer .foot-copy {
+  font-size: 0.6rem; letter-spacing: 0.1em;
+  color: rgba(242, 237, 228, 0.2);
+}
+
+
+/* ─── BUTTONS ────────────────────────────────────────────────────────────────
+   .btn-primary  — solid fill, wipes accent colour on hover
+   .btn-outline  — text link with animated underline
+   .btn-ghost    — transparent, accent border, fills on hover (dark bg)
+─────────────────────────────────────────────────────────────────────────── */
+.btn-primary {
+  font-family: var(--font-body); font-size: var(--text-small);
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--white); background: var(--ink);
+  border: none; padding: 1rem 2.2rem;
+  text-decoration: none; display: inline-block;
+  position: relative; overflow: hidden;
+  transition: color var(--transition);
+}
+.btn-primary::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--accent);
+  transform: translateX(-100%);
+  transition: transform var(--transition-slow);
+}
+.btn-primary:hover::before { transform: translateX(0); }
+.btn-primary span { position: relative; z-index: 1; }
+
+.btn-outline {
+  font-family: var(--font-body); font-size: var(--text-small);
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--ink-dim); text-decoration: none;
+  border-bottom: 1px solid var(--rule); padding-bottom: 0.15rem;
+  transition: color var(--transition), border-color var(--transition);
+}
+.btn-outline:hover { color: var(--accent); border-color: var(--accent); }
+
+.btn-ghost {
+  font-family: var(--font-body); font-size: var(--text-small);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-light); border: 1px solid var(--accent);
+  padding: 1.1rem 2.5rem; text-decoration: none;
+  position: relative; overflow: hidden;
+  transition: color var(--transition);
+}
+.btn-ghost::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--accent); transform: translateX(-100%);
+  transition: transform var(--transition-slow);
+}
+.btn-ghost:hover::before { transform: translateX(0); }
+.btn-ghost span { position: relative; z-index: 1; }
+
+
+/* ─── SECTION LABEL ──────────────────────────────────────────────────────────
+   Used above section titles: "// 001 — Architecture"
+─────────────────────────────────────────────────────────────────────────── */
+.section-label {
+  font-family: var(--font-body);
+  font-size: var(--text-micro); letter-spacing: 0.35em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: 0.75rem;
+}
+.section-label::before  { content: ''; width: 24px; height: 1px; background: var(--accent); }
+.section-label.on-dark  { color: var(--accent-2); }
+.section-label.on-dark::before { background: var(--accent-2); }
+
+/* Ghost number behind section titles */
+.sec-ghost-num {
+  font-family: var(--font-display);
+  font-size: clamp(5rem, 9vw, 10rem);
+  font-weight: 900; line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(15, 14, 12, 0.1);
+  user-select: none; margin-bottom: -1rem;
+}
+.sec-ghost-num.on-dark { -webkit-text-stroke-color: rgba(242, 237, 228, 0.06); }
+
+/* Section headline */
+.sec-title {
+  font-family: var(--font-display);
+  font-size: var(--text-h2); font-weight: 900;
+  letter-spacing: -0.03em; line-height: 1.05;
+  color: var(--ink);
+}
+.sec-title em      { font-style: italic; color: var(--accent); }
+.sec-title.on-dark { color: var(--ink-light); }
+.sec-title.on-dark em { color: var(--accent-2); }
+
+/* Vertical sidebar label (rotated text in two-col layouts) */
+.v-label {
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  font-family: var(--font-body);
+  font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--ink-dim);
+  display: flex; align-items: center; justify-content: center;
+  border-right: var(--border); padding: 0 1.5rem;
+  width: var(--sidebar-width); flex-shrink: 0;
+}
+.v-label.on-dark { color: rgba(242,237,228,0.2); border-right-color: var(--rule-dark); }
+
+
+/* ─── CROSS-LINK NAVIGATION CARDS ────────────────────────────────────────────
+   Previous / Next navigation at the foot of content pages.
+─────────────────────────────────────────────────────────────────────────── */
+.cross-links {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 2px; background: var(--rule);
+}
+.cross-link-card {
+  background: var(--bg); padding: 3rem 5rem;
+  text-decoration: none; display: flex;
+  align-items: center; justify-content: space-between;
+  transition: background var(--transition);
+}
+.cross-link-card:hover { background: var(--bg-alt); }
+.cross-link-card .clc-label {
+  font-family: var(--font-body);
+  font-size: var(--text-micro); letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 0.5rem;
+}
+.cross-link-card .clc-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem; font-weight: 900;
+  letter-spacing: -0.02em; color: var(--ink);
+}
+.cross-link-card .clc-arrow {
+  font-size: 2rem; color: var(--ink-dim);
+  transition: transform var(--transition-slow), color var(--transition);
+}
+.cross-link-card:hover .clc-arrow { color: var(--accent); }
+.cross-link-card:hover .clc-arrow.right { transform: translateX(6px); }
+.cross-link-card:hover .clc-arrow.left  { transform: translateX(-6px); }
+
+
+/* ─── STATUS PILLS ───────────────────────────────────────────────────────────
+─────────────────────────────────────────────────────────────────────────── */
+.status-pill {
+  font-family: var(--font-body);
+  font-size: var(--text-micro); letter-spacing: 0.2em; text-transform: uppercase;
+  padding: 0.35rem 0.75rem; border: 1px solid; z-index: 5;
+}
+.status-online {
+  color: var(--green);
+  border-color: rgba(74, 222, 128, 0.3);
+  background: rgba(74, 222, 128, 0.06);
+}
+.status-online::before { content: '● '; animation: blink 1.2s step-end infinite; }
+.status-location {
+  color: rgba(242, 237, 228, 0.5);
+  border-color: rgba(242, 237, 228, 0.12);
+  background: rgba(15, 14, 12, 0.4);
+}
+
+
+/* ─── PHOTO FRAME (corner brackets) ──────────────────────────────────────── */
+.photo-frame { position: relative; }
+.photo-frame::before, .photo-frame::after,
+.photo-frame .pf-inner::before, .photo-frame .pf-inner::after {
+  content: ''; position: absolute;
+  width: 18px; height: 18px;
+  border-color: var(--accent); border-style: solid; z-index: 4;
+}
+.photo-frame::before  { top: -2px;    left: -2px;  border-width: 2px 0 0 2px; }
+.photo-frame::after   { top: -2px;    right: -2px; border-width: 2px 2px 0 0; }
+.photo-frame .pf-inner { position: absolute; inset: 0; }
+.photo-frame .pf-inner::before { bottom: -2px; left: -2px;  border-width: 0 0 2px 2px; }
+.photo-frame .pf-inner::after  { bottom: -2px; right: -2px; border-width: 0 2px 2px 0; }
+
+/* Photo placeholder */
+.photo-placeholder {
+  width: 100%; height: 100%;
+  background: var(--bg-dark-alt);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.photo-placeholder svg { width: 80%; height: 80%; opacity: 0.9; }
+
+
+/* ─── ANNOTATIONS (hero photo callouts) ──────────────────────────────────── */
+.annot {
+  position: absolute;
+  font-family: var(--font-body);
+  font-size: 0.55rem; color: var(--accent-2);
+  letter-spacing: 0.1em; white-space: nowrap; z-index: 3;
+}
+.annot::before {
+  content: ''; position: absolute;
+  background: var(--accent); opacity: 0.5;
+}
+.annot.right { right: calc(100% + 1.2rem); top: 50%; transform: translateY(-50%); text-align: right; }
+.annot.right::before { right: -1.2rem; top: 50%; width: 1rem; height: 1px; transform: translateY(-50%); }
+.annot.left  { left:  calc(100% + 1.2rem); top: 35%; transform: translateY(-50%); }
+.annot.left::before  { left: -1.2rem; top: 50%; width: 1rem; height: 1px; transform: translateY(-50%); }
+.annot.bottom { left: 50%; top: calc(100% + 1.2rem); transform: translateX(-50%); text-align: center; }
+.annot.bottom::before { left: 50%; top: -1.2rem; width: 1px; height: 1rem; transform: translateX(-50%); }
+
+
+/* ─── SKILL BARS ─────────────────────────────────────────────────────────── */
+.skill-bar  { height: 2px; background: var(--rule); position: relative; overflow: hidden; }
+.skill-fill {
+  position: absolute; top: 0; left: 0; bottom: 0; width: 0;
+  background: linear-gradient(to right, var(--accent), var(--accent-2));
+  transition: width 1.4s cubic-bezier(.16, 1, .3, 1);
+}
+
+
+/* ─── SCROLL REVEALS ─────────────────────────────────────────────────────────
+   Add class "rv"   for fade-up (most common)
+   Add class "rv-l" for slide from left
+   Add class "rv-r" for slide from right
+   Add class "rv-s" for scale-up
+   GSAP ScrollTrigger in shared.js handles the actual animation.
+─────────────────────────────────────────────────────────────────────────── */
+.rv   { opacity: 0; transform: translateY(30px); }
+.rv-l { opacity: 0; transform: translateX(-30px); }
+.rv-r { opacity: 0; transform: translateX(30px); }
+.rv-s { opacity: 0; transform: scale(0.95); }
+
+
+/* ─── KEYFRAMES ──────────────────────────────────────────────────────────── */
+@keyframes blink     { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes arrow-drop {
+  0%,100%{transform:scaleY(1);opacity:1}
+  50%{transform:scaleY(.5);opacity:.4}
+}
+@keyframes spin { 100%{ transform: rotate(360deg); } }
+
+
+/* ─── CUSTOM SCROLLBAR (Webkit only) ──────────────────────────────────────── */
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--accent); }
+
+
+/* ─── RESPONSIVE SHARED ──────────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .main-nav       { padding: 0.9rem 2rem; }
+  .project-nav    { padding: 1.2rem 2rem; }
+  .v-label        { display: none; }
+  .site-footer    { flex-direction: column; gap: 1.5rem; padding: 2rem; text-align: center; }
+  .site-footer .foot-links { flex-wrap: wrap; justify-content: center; }
+  .cross-links    { grid-template-columns: 1fr; }
+  .cross-link-card { padding: 2.5rem 2rem; }
+  .page-hero      { padding: 8rem 2rem 3rem; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NEW COMPONENTS — v2 Upgrade
+   All blocks are clearly labelled. To remove a feature, delete its block.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+
+/* ─── SECTION INDICATOR DOTS (fixed right side) ─────────────────────────────
+   Rendered by shared.js initSectionDots()
+   To disable: remove <div id="section-dots"> from HTML
+─────────────────────────────────────────────────────────────────────────── */
+#section-dots {
+  position: fixed;
+  right: 1.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  pointer-events: none;
+}
+.sec-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  background: transparent;
+  cursor: pointer;
+  pointer-events: all;
+  transition: background var(--transition), box-shadow var(--transition), transform var(--transition);
+  padding: 0;
+  outline: none;
+}
+.sec-dot:hover { transform: scale(1.4); background: var(--accent); }
+.sec-dot.active {
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent), 0 0 20px rgba(181,101,29,0.4);
+  transform: scale(1.2);
+}
+.sec-dot-label {
+  position: absolute;
+  right: 1.6rem;
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  white-space: nowrap;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity var(--transition);
+  pointer-events: none;
+}
+.sec-dot:hover .sec-dot-label { opacity: 1; }
+@media (max-width: 960px) { #section-dots { display: none; } }
+
+
+/* ─── HERO CANVAS (Three.js particle field) ──────────────────────────────────
+   Canvas sits inside .hero-right behind the photo.
+   To disable: remove <canvas id="hero-canvas"> from hero-right
+─────────────────────────────────────────────────────────────────────────── */
+#hero-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+
+/* ─── MAGNETIC BUTTONS ───────────────────────────────────────────────────────
+   Applied to any element with class .mag-btn
+   JS in shared.js initMagneticButtons() handles the movement
+─────────────────────────────────────────────────────────────────────────── */
+.mag-btn {
+  will-change: transform;
+  transition: transform 0.4s cubic-bezier(.16,1,.3,1) !important;
+}
+
+
+/* ─── ACHIEVEMENTS SECTION ───────────────────────────────────────────────────
+   Task 3: Marquee strip + achievement cards grid
+   To add a new fact: copy a <span> inside .am-track
+   To add a new card: copy a .ach-card block
+─────────────────────────────────────────────────────────────────────────── */
+#achievements {
+  background: var(--bg-dark);
+  border-top: 1px solid var(--rule-dark);
+  overflow: hidden;
+}
+
+/* Marquee strip */
+.achievements-marquee {
+  border-bottom: 1px solid var(--rule-dark);
+  overflow: hidden;
+  padding: 0;
+  background: rgba(181,101,29,0.06);
+}
+.am-track {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  white-space: nowrap;
+  padding: 1rem 0;
+  animation: marquee-scroll 35s linear infinite;
+  will-change: transform;
+}
+.am-track:hover { animation-play-state: paused; }
+.am-track span {
+  font-family: var(--font-body);
+  font-size: var(--text-micro);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(242,237,228,0.5);
+  flex-shrink: 0;
+}
+.am-track .am-sep {
+  color: var(--accent-2);
+  font-size: 0.5rem;
+}
+@keyframes marquee-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Achievement cards grid */
+.achievements-inner {
+  padding: 5rem;
+  display: grid;
+  grid-template-columns: 80px 1fr;
+}
+.achievements-content { padding: 2rem 5rem; }
+#achievements .sec-title { color: var(--ink-light); }
+#achievements .sec-title em { color: var(--accent-2); }
+
+.ach-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2px;
+  background: var(--rule-dark);
+  border: 1px solid var(--rule-dark);
+  margin-top: 4rem;
+}
+.ach-card {
+  background: var(--bg-dark);
+  padding: 2.5rem 2rem;
+  transition: background var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+.ach-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.ach-card:hover { background: rgba(181,101,29,0.08); }
+.ach-card:hover::before { opacity: 1; }
+.ach-icon {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+.ach-num {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem,3vw,3rem);
+  font-weight: 900;
+  color: var(--ink-light);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.ach-num .ach-unit {
+  font-size: 0.5em;
+  color: var(--accent-2);
+  vertical-align: super;
+}
+.ach-label {
+  font-family: var(--font-body);
+  font-size: var(--text-micro);
+  letter-spacing: 0.2em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  margin-top: 0.5rem;
+}
+@media (max-width: 960px) {
+  .achievements-inner { grid-template-columns: 1fr; }
+  .achievements-content { padding: 3rem 2rem; }
+  .ach-grid { grid-template-columns: 1fr 1fr; }
+}
+
+
+/* ─── EDUCATION SECTION (in main.html) ──────────────────────────────────────
+   Task 2 & 11: Timeline section inserted between projects and contact
+   To add a new entry: copy an .edu-item block
+   To remove an entry: delete its .edu-item block
+─────────────────────────────────────────────────────────────────────────── */
+#education {
+  padding: 8rem 0;
+  background: var(--bg);
+  border-top: 1px solid var(--rule);
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  position: relative;
+  overflow: hidden;
+}
+.education-inner { padding: 2rem 5rem; }
+
+.edu-timeline {
+  position: relative;
+  margin-top: 4rem;
+  padding: 2rem 0;
+}
+/* The vertical centre line */
+.edu-timeline::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0; bottom: 0;
+  width: 1px;
+  background: var(--rule);
+  transform: translateX(-50%);
+}
+.edu-line-fill {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 1px;
+  height: 0;            /* animated by JS to 100% on scroll */
+  background: linear-gradient(to bottom, var(--accent), var(--accent-2));
+  transform: translateX(-50%);
+  transition: height 0.05s linear;
+}
+
+/* Individual timeline item */
+.edu-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 3rem;
+  margin-bottom: 4rem;
+  position: relative;
+}
+.edu-item[data-side="left"] {
+  flex-direction: row;
+  padding-right: calc(50% + 2rem);
+  justify-content: flex-end;
+}
+.edu-item[data-side="right"] {
+  flex-direction: row-reverse;
+  padding-left: calc(50% + 2rem);
+  justify-content: flex-start;
+}
+
+/* Dot on the timeline */
+.ei-dot {
+  position: absolute;
+  left: 50%;
+  top: 1.2rem;
+  transform: translate(-50%, -50%);
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--accent);
+  z-index: 2;
+  transition: box-shadow var(--transition), background var(--transition);
+}
+.edu-item.in-view .ei-dot {
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent), 0 0 24px rgba(181,101,29,0.35);
+}
+@keyframes pulse-dot {
+  0%,100% { box-shadow: 0 0 8px var(--accent), 0 0 16px rgba(181,101,29,0.3); }
+  50%      { box-shadow: 0 0 16px var(--accent), 0 0 32px rgba(181,101,29,0.5); }
+}
+.edu-item.in-view .ei-dot { animation: pulse-dot 2.5s ease-in-out infinite; }
+
+/* Date badge */
+.ei-date {
+  font-family: var(--font-body);
+  font-size: var(--text-micro);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--accent);
+  white-space: nowrap;
+  padding-top: 0.8rem;
+  flex-shrink: 0;
+}
+
+/* Card */
+.ei-card {
+  background: var(--bg-alt);
+  border: 1px solid var(--rule);
+  padding: 2rem 2.5rem;
+  max-width: 420px;
+  flex-shrink: 0;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  position: relative;
+}
+.ei-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 24px rgba(181,101,29,0.1);
+}
+.ei-card-type {
+  font-family: var(--font-body);
+  font-size: var(--text-micro);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.6rem;
+}
+.ei-card-title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-bottom: 0.3rem;
+  line-height: 1.1;
+}
+.ei-card-sub {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--ink-dim);
+  margin-bottom: 1rem;
+}
+.ei-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+}
+.ei-tag {
+  font-family: var(--font-body);
+  font-size: 0.52rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  border: 1px solid var(--rule);
+  padding: 0.2rem 0.5rem;
+}
+.ei-tag.accent { border-color: rgba(181,101,29,.3); color: var(--accent); }
+
+/* Education link to full page */
+.edu-cta-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 3rem;
+}
+
+@media (max-width: 960px) {
+  #education { grid-template-columns: 1fr; padding: 5rem 0; }
+  .education-inner { padding: 3rem 2rem; }
+  .edu-timeline::before { left: 1.5rem; }
+  .edu-line-fill { left: 1.5rem; }
+  .edu-item[data-side="left"],
+  .edu-item[data-side="right"] {
+    flex-direction: column;
+    padding: 0 0 0 4rem;
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+  .ei-dot { left: 1.5rem; }
+  .ei-card { max-width: 100%; }
+}
+
+
+/* ─── HEX SKILL GRID ─────────────────────────────────────────────────────────
+   Task 9: Replaces flat skill bars with 3D hexagonal cells
+   To add a skill: copy a .hex-cell block
+   To remove a skill: delete its .hex-cell block
+   To add a new category: copy a .hex-group block
+─────────────────────────────────────────────────────────────────────────── */
+.hex-grid-wrap { margin-top: 4rem; }
+
+.hex-group { margin-bottom: 3.5rem; }
+.hex-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-label);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(242,237,228,0.08);
+  margin-bottom: 1.5rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color var(--transition);
+}
+.hex-group-header:hover { border-bottom-color: var(--accent-2); }
+.hex-group-header .sg-arrow {
+  opacity: 0;
+  transform: translateX(-5px);
+  transition: all var(--transition);
+}
+.hex-group-header:hover .sg-arrow { opacity: 1; transform: translateX(0); }
+
+.hex-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.hex-cell {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  cursor: default;
+  perspective: 600px;
+}
+.hex-cell-inner {
+  position: relative;
+  width: 100%; height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(.16,1,.3,1);
+}
+.hex-cell:hover .hex-cell-inner { transform: rotateY(180deg); }
+
+/* Hexagon clip — both faces */
+.hex-front, .hex-back {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.hex-front {
+  background: rgba(242,237,228,0.06);
+  border: none;
+  transition: background var(--transition);
+}
+.hex-cell:hover .hex-front { background: rgba(181,101,29,0.15); }
+.hex-back {
+  background: rgba(181,101,29,0.18);
+  transform: rotateY(180deg);
+}
+
+.hex-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+.hex-name {
+  font-family: var(--font-body);
+  font-size: 0.48rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(242,237,228,0.6);
+  text-align: center;
+  padding: 0 0.3rem;
+}
+/* Back face — level bar */
+.hex-level-wrap {
+  width: 60%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+.hex-level-pct {
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  color: var(--accent-2);
+  letter-spacing: 0.1em;
+}
+.hex-level-bar {
+  width: 100%;
+  height: 2px;
+  background: rgba(242,237,228,0.1);
+  position: relative;
+  overflow: hidden;
+}
+.hex-level-fill {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  width: 0;
+  transition: width 1s cubic-bezier(.16,1,.3,1);
+}
+
+@media (max-width: 960px) {
+  .hex-cell { width: 80px; height: 80px; }
+  .hex-icon { font-size: 1.1rem; }
+  .hex-name { font-size: 0.42rem; }
+}
+
+
+/* ─── AMBIENT CANVAS ORBS ─────────────────────────────────────────────────────
+   Task 10: Canvas added as first child of #skills and #contact
+   To disable: remove <canvas class="ambient-canvas"> from those sections
+─────────────────────────────────────────────────────────────────────────── */
+.ambient-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  width: 100% !important;
+  height: 100% !important;
+}
+/* Ensure section content stays above canvas */
+#skills > *:not(.ambient-canvas),
+#contact > *:not(.ambient-canvas) {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* ─── PROJECT CARD SPOTLIGHT ─────────────────────────────────────────────────
+   Task 4b: Radial gradient follows cursor inside each project card
+─────────────────────────────────────────────────────────────────────────── */
+.pc-spotlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  background: radial-gradient(
+    circle 140px at var(--mx, 50%) var(--my, 50%),
+    rgba(212,132,58,0.15),
+    transparent 70%
+  );
+  z-index: 3;
+}
+a.proj-card:hover .pc-spotlight { opacity: 1; }
+
+
+/* ─── CONTACT FORM ────────────────────────────────────────────────────────────
+   Task 12b: Brutalist styled HTML/CSS contact form
+   To add a field: copy a .cf-field block
+   To remove a field: delete its .cf-field block
+─────────────────────────────────────────────────────────────────────────── */
+.contact-form {
+  width: 100%;
+  margin-top: 2.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--rule-dark);
+  border: 1px solid var(--rule-dark);
+}
+.cf-field {
+  background: var(--bg-dark);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: background var(--transition);
+}
+.cf-field:focus-within { background: rgba(181,101,29,0.06); }
+.cf-field--full { grid-column: 1 / -1; }
+.cf-field--btn  { grid-column: 1 / -1; background: transparent; border: none; padding: 1.5rem 0 0; }
+.cf-label {
+  font-family: var(--font-body);
+  font-size: 0.52rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(242,237,228,0.3);
+  transition: color var(--transition);
+}
+.cf-field:focus-within .cf-label { color: var(--accent-2); }
+.cf-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(242,237,228,0.08);
+  outline: none;
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: rgba(242,237,228,0.8);
+  padding: 0.5rem 0;
+  width: 100%;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  caret-color: var(--accent-2);
+}
+.cf-input:focus {
+  border-bottom-color: var(--accent-2);
+  box-shadow: 0 2px 0 var(--accent-2);
+}
+.cf-input::placeholder { color: rgba(242,237,228,0.18); }
+.cf-textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.7;
+}
+.cf-success {
+  display: none;
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--green);
+  letter-spacing: 0.1em;
+  padding: 1rem 0;
+}
+.cf-success.visible { display: block; }
+@media (max-width: 960px) {
+  .contact-form { grid-template-columns: 1fr; }
+}
+
+
+/* ─── SKILL CONSTELLATION (about.html) ────────────────────────────────────────
+   Task 8a: 3D rotating orbit rings of skill nodes
+   To add a skill node: copy a .sc-node inside a .sc-orbit
+   To add a new orbit ring: copy a .sc-orbit with a different --angle
+─────────────────────────────────────────────────────────────────────────── */
+.skill-constellation-wrap {
+  perspective: 800px;
+  width: 100%;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 3rem;
+  position: relative;
+}
+.skill-constellation {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  transform-style: preserve-3d;
+}
+/* Centre hub */
+.sc-hub {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 44px; height: 44px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 20px var(--accent), 0 0 40px rgba(181,101,29,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 900;
+  color: var(--ink-light);
+  letter-spacing: -0.02em;
+  z-index: 5;
+}
+/* Orbit rings */
+.sc-orbit {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform-style: preserve-3d;
+  animation: orbit-spin 20s linear infinite;
+}
+.sc-orbit:nth-child(2) {
+  width: 180px; height: 180px;
+  margin: -90px 0 0 -90px;
+  border: 1px solid rgba(181,101,29,0.2);
+  border-radius: 50%;
+  --tilt: rotateX(72deg);
+  transform: rotateX(72deg);
+  animation-duration: 18s;
+}
+.sc-orbit:nth-child(3) {
+  width: 240px; height: 240px;
+  margin: -120px 0 0 -120px;
+  border: 1px solid rgba(181,101,29,0.12);
+  border-radius: 50%;
+  transform: rotateX(55deg) rotateZ(40deg);
+  animation-duration: 28s;
+  animation-direction: reverse;
+}
+.sc-orbit:nth-child(4) {
+  width: 200px; height: 200px;
+  margin: -100px 0 0 -100px;
+  border: 1px solid rgba(26,58,110,0.25);
+  border-radius: 50%;
+  transform: rotateX(25deg) rotateZ(80deg);
+  animation-duration: 22s;
+}
+@keyframes orbit-spin {
+  from { transform: var(--tilt, rotateX(72deg)) rotateZ(0deg); }
+  to   { transform: var(--tilt, rotateX(72deg)) rotateZ(360deg); }
+}
+/* Skill nodes on orbits */
+.sc-node {
+  position: absolute;
+  top: 50%; left: 100%;
+  transform: translateY(-50%);
+  background: var(--bg-dark-alt);
+  border: 1px solid var(--accent);
+  padding: 0.25rem 0.6rem;
+  font-family: var(--font-body);
+  font-size: 0.5rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  white-space: nowrap;
+  cursor: default;
+  transition: background var(--transition);
+}
+.sc-node:hover {
+  background: var(--accent);
+  color: var(--ink-light);
+}
+/* Pause orbit on hover of entire constellation */
+.skill-constellation-wrap:hover .sc-orbit {
+  animation-play-state: paused;
+}
+
+
+/* ─── COUNT-UP STATS (about.html) ─────────────────────────────────────────────
+   data-count on .stat-n drives count-up animation
+   Non-numeric (∞, UET) are skipped automatically by JS
+─────────────────────────────────────────────────────────────────────────── */
+.stat-n[data-count] { transition: none; }
+
+
+/* ─── NAV GLOWING SCROLL-SPY UNDERLINE ────────────────────────────────────────
+   Task 11: Upgrade existing .nav-links a::after to glow
+─────────────────────────────────────────────────────────────────────────── */
+.nav-links a::after {
+  height: 2px !important;
+}
+.nav-links a[data-active="true"]::after,
+.nav-links a.active::after {
+  width: 100%;
+  box-shadow: 0 0 8px var(--accent), 0 0 16px rgba(181,101,29,0.4);
+}
+.main-nav.dark .nav-links a[data-active="true"]::after,
+.main-nav.dark .nav-links a.active::after {
+  box-shadow: 0 0 8px var(--accent-2), 0 0 16px rgba(212,132,58,0.4);
+}
+
+
+/* ─── EDUCATION FULL PAGE (education.html) ────────────────────────────────────
+   Shared layout/component styles for the dedicated education page
+─────────────────────────────────────────────────────────────────────────── */
+.edu-page-hero {
+  padding: var(--page-header-pad);
+  max-width: var(--max-content);
+  margin: 0 auto;
+  border-bottom: var(--border);
+  background: var(--bg);
+}
+
+/* Full-page vertical timeline (education.html) */
+.edu-full-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 5rem 4rem 8rem;
+}
+.edu-phase {
+  position: relative;
+  padding-left: 3.5rem;
+  padding-bottom: 5rem;
+  border-left: 1px solid var(--rule);
+}
+.edu-phase:last-child { border-left-color: transparent; }
+.edu-phase-dot {
+  position: absolute;
+  left: -7px; top: 0;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--accent);
+}
+.edu-phase:hover .edu-phase-dot {
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+.edu-phase-year {
+  font-family: var(--font-body);
+  font-size: var(--text-micro);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.75rem;
+}
+.edu-phase-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  line-height: 1.05;
+  margin-bottom: 0.4rem;
+}
+.edu-phase-inst {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--ink-dim);
+  margin-bottom: 1.5rem;
+}
+.edu-phase-body {
+  font-size: var(--text-body);
+  line-height: 2;
+  color: var(--ink-dim);
+  max-width: 650px;
+}
+.edu-phase-body p { margin-bottom: 1rem; }
+.edu-phase-body strong { color: var(--ink); font-weight: 500; }
+
+/* Course tags */
+.edu-courses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 1.2rem;
+}
+.edu-course-tag {
+  font-family: var(--font-body);
+  font-size: var(--text-micro);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  border: 1px solid var(--rule);
+  padding: 0.25rem 0.65rem;
+  transition: border-color var(--transition), color var(--transition);
+}
+.edu-course-tag:hover { border-color: var(--accent); color: var(--accent); }
+.edu-course-tag.active-course { border-color: rgba(181,101,29,.35); color: var(--accent); }
+
+/* CGPA display */
+.cgpa-display {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: 1rem 0;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid rgba(181,101,29,.3);
+  background: rgba(181,101,29,.05);
+}
+.cgpa-num {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--accent);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.cgpa-label {
+  font-family: var(--font-body);
+  font-size: var(--text-micro);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+/* Cert cards */
+.cert-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  margin-top: 2rem;
+}
+.cert-card {
+  background: var(--bg);
+  padding: 2rem;
+  transition: background var(--transition), border-color var(--transition);
+  border: 1px solid transparent;
+}
+.cert-card:hover { background: var(--bg-alt); border-color: var(--accent); }
+.cert-org {
+  font-family: var(--font-body);
+  font-size: var(--text-micro);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+.cert-name {
+  font-family: var(--font-label);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.3;
+  margin-bottom: 0.5rem;
+}
+.cert-detail {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--ink-dim);
+  line-height: 1.7;
+}
+.cert-status {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-family: var(--font-body);
+  font-size: var(--text-micro);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  padding: 0.2rem 0.6rem;
+  border: 1px solid rgba(181,101,29,.3);
+}
+
+/* Learning roadmap (horizontal track) */
+.roadmap-track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 3rem 0;
+  padding: 2rem 0;
+}
+.roadmap-track::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 0; right: 0;
+  height: 1px;
+  background: var(--rule);
+  transform: translateY(-50%);
+  z-index: 0;
+}
+.rm-node {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 1;
+}
+.rm-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--bg-alt);
+  border: 2px solid var(--rule);
+  transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+}
+.rm-node.done .rm-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+.rm-node.current .rm-dot {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  box-shadow: 0 0 12px var(--accent-2), 0 0 24px rgba(212,132,58,0.4);
+  animation: pulse-dot 2s infinite;
+}
+.rm-label {
+  font-family: var(--font-body);
+  font-size: 0.52rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  text-align: center;
+}
+.rm-node.done .rm-label { color: var(--ink); }
+.rm-node.current .rm-label { color: var(--accent-2); }
+
+@media (max-width: 960px) {
+  .edu-full-wrap { padding: 4rem 2rem 6rem; }
+  .roadmap-track { flex-direction: column; align-items: flex-start; gap: 1.5rem; padding: 0 0 0 2rem; }
+  .roadmap-track::before { top: 0; bottom: 0; left: 0.4rem; width: 1px; height: auto; transform: none; }
+  .rm-node { flex-direction: row; flex: none; align-items: center; gap: 1rem; }
+  .cert-grid { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — Ishtiyaq Ahmad</title>
+
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="shared.css">
+
+  <!-- GSAP + ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+  <!-- Lenis smooth scroll. To remove: delete this line -->
+  <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+  <!-- VanillaTilt. To remove: delete this line -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+
+  <style>
+    /* ─── ABOUT PAGE LAYOUT ──────────────────────────────────────────────────
+       Two-column hero: bio left, constellation + stats right.
+       On mobile: stacks to single column.
+    ─────────────────────────────────────────────────────────────────────────── */
+    .page-wrapper {
+      padding-top: var(--nav-height);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg);
+      min-height: 80vh;
+      position: relative;
+    }
+
+    /* ── Left: Bio ── */
+    .about-left {
+      padding: var(--section-pad);
+      border-right: var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .about-body {
+      font-size: var(--text-body);
+      line-height: 2.1;
+      color: var(--ink-dim);
+      max-width: 480px;
+    }
+    /* Each paragraph gets data-depth for subtle parallax on scroll */
+    .about-body p + p { margin-top: 1.5rem; }
+    .about-body strong { color: var(--ink); font-weight: 500; }
+
+    /* ── Right: Constellation + Stats ── */
+    .about-right {
+      padding: var(--section-pad);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 3rem;
+    }
+
+    /* Stats grid — overrides shared.css for about-specific variant */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--rule);
+      border: var(--border);
+    }
+    .stat {
+      background: var(--bg);
+      padding: 2.5rem 2rem;
+      transition: background var(--transition);
+    }
+    .stat:hover { background: var(--bg-alt); }
+    .stat-n {
+      font-family: var(--font-display);
+      font-size: clamp(2.2rem, 3vw, 3rem);
+      font-weight: 900;
+      color: var(--ink);
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+    .stat-n .unit { font-size: 0.5em; color: var(--accent); vertical-align: super; }
+    .stat-lbl {
+      font-family: var(--font-body);
+      font-size: var(--text-micro);
+      letter-spacing: 0.2em;
+      color: var(--ink-dim);
+      text-transform: uppercase;
+      margin-top: 0.6rem;
+    }
+
+    .about-quote {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-style: italic;
+      color: var(--accent-blue);
+      line-height: 1.65;
+      border-left: 2px solid var(--accent);
+      padding-left: 1.5rem;
+    }
+    .about-quote cite {
+      display: block;
+      font-family: var(--font-body);
+      font-size: var(--text-micro);
+      font-style: normal;
+      letter-spacing: 0.2em;
+      color: var(--ink-dim);
+      text-transform: uppercase;
+      margin-top: 0.75rem;
+    }
+
+    /* ── Philosophy / Values section ── */
+    .about-values {
+      background: var(--bg-dark);
+      padding: 7rem 5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 2px;
+      background: var(--bg-dark);
+      border-top: 1px solid var(--rule-dark);
+    }
+    .value-card {
+      background: var(--bg-dark);
+      padding: 3rem 2.5rem;
+      border-right: 1px solid var(--rule-dark);
+      transition: background var(--transition);
+    }
+    .value-card:last-child { border-right: none; }
+    .value-card:hover { background: rgba(181,101,29,0.06); }
+    .vc-num {
+      font-family: var(--font-display);
+      font-size: 4rem;
+      font-weight: 900;
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(242,237,228,0.08);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+      user-select: none;
+    }
+    .vc-title {
+      font-family: var(--font-label);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--ink-light);
+      letter-spacing: -0.01em;
+      margin-bottom: 1rem;
+    }
+    .vc-title em { font-style: italic; color: var(--accent-2); }
+    .vc-body {
+      font-family: var(--font-body);
+      font-size: var(--text-small);
+      color: var(--ink-faint);
+      line-height: 2;
+    }
+
+    /* ── Tools / Stack strip ── */
+    .about-tools {
+      padding: 5rem;
+      border-top: var(--border);
+      background: var(--bg-alt);
+    }
+    .tools-label {
+      font-family: var(--font-body);
+      font-size: var(--text-micro);
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .tools-label::before { content: ''; width: 24px; height: 1px; background: var(--accent); }
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1px;
+      background: var(--rule);
+      border: var(--border);
+    }
+    .tool-item {
+      background: var(--bg);
+      padding: 1.25rem 1.5rem;
+      font-family: var(--font-body);
+      font-size: var(--text-small);
+      color: var(--ink-dim);
+      transition: background var(--transition), color var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .tool-item:hover { background: var(--bg-alt); color: var(--accent); }
+    .tool-item .ti-icon { font-size: 1.1rem; }
+
+    @media(max-width: 960px) {
+      .page-wrapper { grid-template-columns: 1fr; }
+      .about-left, .about-right { padding: var(--section-pad-sm); border: none; }
+      .about-values { grid-template-columns: 1fr; padding: 4rem 2rem; }
+      .value-card { border-right: none; border-bottom: 1px solid var(--rule-dark); }
+      .about-tools { padding: 3rem 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="cur"></div>
+  <div id="cur-ring"></div>
+  <div id="loader">
+    <div class="ld-logo">IA<em>.</em></div>
+    <div class="ld-bar"><div class="ld-fill" id="ld-fill-el"></div></div>
+  </div>
+
+  <!-- SECTION INDICATOR DOTS — remove div to disable -->
+  <div id="section-dots"></div>
+
+  <!-- ══════════════════════════════════════════════════
+       NAV — with Education link added
+       ══════════════════════════════════════════════════ -->
+  <nav class="main-nav" id="main-nav">
+    <a href="main.html" class="nav-logo">IA.</a>
+    <ul class="nav-links">
+      <li><a href="about.html" class="active">About</a></li>
+      <li><a href="education.html">Education</a></li>
+      <li><a href="stack-hardware.html">Stack</a></li>
+      <li><a href="main.html#projects">Projects</a></li>
+      <li><a href="main.html#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════════
+       BIO + CONSTELLATION HERO
+       ══════════════════════════════════════════════════ -->
+  <main class="page-wrapper" id="bio">
+    <div class="about-left">
+      <div class="section-label rv">001 — Architecture</div>
+      <h1 class="sec-title rv" style="margin-bottom: 2.5rem;">
+        Built in the<br><em>Real World.</em><br>Coded for<br>the Digital.
+      </h1>
+
+      <!-- data-depth attributes enable parallax scroll from shared.js initParallaxLayers() -->
+      <div class="about-body rv">
+        <p data-depth="0.05">
+          I build systems that move and interfaces that feel alive. Emerging from the high-altitude terrains of
+          <strong>Gilgit-Baltistan</strong>, I now pursue Mechatronics and Control Engineering at
+          <strong>UET Lahore</strong>, where I sit at the precise intersection of machines and software.
+        </p>
+        <p data-depth="0.08">
+          I don't just write scripts — I reverse-engineer proprietary hardware protocols, design precision
+          3D-printed components, and craft <strong>production-grade web experiences</strong> that refuse to
+          look like everything else. Every project is a complete, end-to-end ecosystem.
+        </p>
+        <p data-depth="0.11">
+          Fluent in English, Urdu, and Burushaski. Currently acquiring <strong>Mandarin (HSK)</strong>.
+          Running Kubuntu with a custom Zsh + Powerlevel10k environment, because the tools matter.
+        </p>
+      </div>
+
+      <div style="margin-top: 2.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+        <!-- mag-btn class enables magnetic pull from shared.js initMagneticButtons() -->
+        <a href="education.html" class="btn-primary mag-btn rv"><span>Education Record →</span></a>
+        <a href="main.html#contact" class="btn-outline mag-btn rv">Get in Touch</a>
+      </div>
+    </div>
+
+    <div class="about-right">
+      <!-- ── 3D Skill Constellation ──────────────────────────────────────────
+           CSS 3D rotating orbit rings. Each .sc-orbit holds .sc-node skill tags.
+           TO ADD A SKILL NODE: copy a .sc-node inside an orbit
+           TO ADD AN ORBIT: copy a .sc-orbit block and update transform/animation-duration
+           TO DISABLE: remove .skill-constellation-wrap entirely
+      ─────────────────────────────────────────────────────────────────────── -->
+      <div class="skill-constellation-wrap rv">
+        <div class="skill-constellation">
+          <!-- Centre hub -->
+          <div class="sc-hub">IA</div>
+
+          <!-- Orbit 1: Web / Software skills (tilted 72°) -->
+          <div class="sc-orbit" style="
+            width: 190px; height: 190px;
+            margin: -95px 0 0 -95px;
+            border: 1px solid rgba(181,101,29,0.2);
+            border-radius: 50%;
+            animation: orbit-spin-1 18s linear infinite;
+          ">
+            <div class="sc-node" style="transform: translateY(-50%) rotate(0deg) translateX(95px) rotate(0deg);">React</div>
+            <div class="sc-node" style="position:absolute; top:50%; left:100%; transform:translateY(-50%);">Three.js</div>
+            <div class="sc-node" style="position:absolute; top:0; left:50%; transform:translate(-50%,-100%);">GSAP</div>
+            <div class="sc-node" style="position:absolute; bottom:0; left:50%; transform:translate(-50%,100%);">Python</div>
+          </div>
+
+          <!-- Orbit 2: Hardware skills (counter-rotate) -->
+          <div class="sc-orbit" style="
+            width: 250px; height: 250px;
+            margin: -125px 0 0 -125px;
+            border: 1px solid rgba(181,101,29,0.1);
+            border-radius: 50%;
+            transform: rotateX(55deg) rotateZ(30deg);
+            animation: orbit-spin-2 26s linear infinite;
+          ">
+            <div class="sc-node" style="position:absolute; top:50%; left:100%; transform:translateY(-50%);">SolidWorks</div>
+            <div class="sc-node" style="position:absolute; top:50%; right:100%; transform:translateY(-50%);">KiCad</div>
+            <div class="sc-node" style="position:absolute; top:0; left:50%; transform:translate(-50%,-100%);">TM4C ARM</div>
+            <div class="sc-node" style="position:absolute; bottom:0; left:50%; transform:translate(-50%,100%);">BLDC / FOC</div>
+          </div>
+
+          <!-- Orbit 3: Language / Environment skills -->
+          <div class="sc-orbit" style="
+            width: 210px; height: 210px;
+            margin: -105px 0 0 -105px;
+            border: 1px solid rgba(26,58,110,0.22);
+            border-radius: 50%;
+            transform: rotateX(25deg) rotateZ(70deg);
+            animation: orbit-spin-3 22s linear infinite reverse;
+          ">
+            <div class="sc-node" style="position:absolute; top:50%; left:100%; transform:translateY(-50%);">Kubuntu</div>
+            <div class="sc-node" style="position:absolute; top:50%; right:100%; transform:translateY(-50%);">Zsh P10k</div>
+            <div class="sc-node" style="position:absolute; top:0; left:50%; transform:translate(-50%,-100%);">Mandarin</div>
+            <div class="sc-node" style="position:absolute; bottom:0; left:50%; transform:translate(-50%,100%);">Git CLI</div>
+          </div>
+        </div>
+      </div>
+
+      <style>
+        /* Orbit animations scoped here since they're about-page specific */
+        @keyframes orbit-spin-1 {
+          from { transform: rotateX(72deg) rotateZ(0deg); }
+          to   { transform: rotateX(72deg) rotateZ(360deg); }
+        }
+        @keyframes orbit-spin-2 {
+          from { transform: rotateX(55deg) rotateZ(30deg); }
+          to   { transform: rotateX(55deg) rotateZ(390deg); }
+        }
+        @keyframes orbit-spin-3 {
+          from { transform: rotateX(25deg) rotateZ(70deg); }
+          to   { transform: rotateX(25deg) rotateZ(-290deg); }
+        }
+      </style>
+
+      <!-- Stats with count-up — data-count drives initCountUp() in shared.js -->
+      <div class="stats-grid rv">
+        <div class="stat">
+          <div class="stat-n" data-count="4" data-count-suffix="+">4<span class="unit">+</span></div>
+          <div class="stat-lbl">Engineering Disciplines</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n" data-count="4">4</div>
+          <div class="stat-lbl">Languages Spoken</div>
+        </div>
+        <div class="stat">
+          <!-- Non-numeric: count-up is skipped automatically -->
+          <div class="stat-n">∞</div>
+          <div class="stat-lbl">End-to-End Systems</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n">UET</div>
+          <div class="stat-lbl">Lahore — Mechatronics Eng.</div>
+        </div>
+      </div>
+
+      <blockquote class="about-quote rv">
+        "Engineering is not merely about making things work. It is about making things worth working for."
+        <cite>— Ishtiyaq Ahmad</cite>
+      </blockquote>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════════════
+       VALUES / PHILOSOPHY
+       TO ADD A VALUE CARD: copy a .value-card block
+       TO REMOVE THIS SECTION: delete from here to END VALUES
+       ══════════════════════════════════════════════════ -->
+  <section id="values" class="about-values">
+    <div class="value-card rv">
+      <div class="vc-num">01</div>
+      <div class="vc-title">End-to-End<br><em>Ownership</em></div>
+      <div class="vc-body">
+        Every system I build is complete. From bare-metal firmware to the user interface that controls it —
+        no half-finished prototypes, no outsourced UX. Total ownership of the stack.
+      </div>
+    </div>
+    <div class="value-card rv">
+      <div class="vc-num">02</div>
+      <div class="vc-title">Precision Over<br><em>Speed</em></div>
+      <div class="vc-body">
+        I do not ship fast. I ship correctly. Mathematical proof of stability before hardware deployment.
+        FEA simulation before fabrication. A 0.5% failure rate is unacceptable in mechatronics.
+      </div>
+    </div>
+    <div class="value-card rv">
+      <div class="vc-num">03</div>
+      <div class="vc-title">Distinctive<br><em>Aesthetics</em></div>
+      <div class="vc-body">
+        I reject generic, template-based design. Whether it is a UI or a PCB layout, the aesthetic is
+        deliberate, purposeful, and unmistakably my own. Character is non-negotiable.
+      </div>
+    </div>
+    <!-- 🛠️ Add new value cards above here -->
+  </section>
+  <!-- END VALUES ══════════════════════════════════════ -->
+
+
+  <!-- ══════════════════════════════════════════════════
+       TOOLS STRIP
+       TO ADD A TOOL: copy a .tool-item block
+       TO REMOVE THIS SECTION: delete from here to END TOOLS
+       ══════════════════════════════════════════════════ -->
+  <section id="tools" class="about-tools">
+    <div class="tools-label">Daily Instruments</div>
+    <div class="tools-grid">
+      <div class="tool-item rv"><span class="ti-icon">🐧</span>Kubuntu Linux</div>
+      <div class="tool-item rv"><span class="ti-icon">💻</span>Zsh + Powerlevel10k</div>
+      <div class="tool-item rv"><span class="ti-icon">🔀</span>Git (CLI-first)</div>
+      <div class="tool-item rv"><span class="ti-icon">⚙</span>SolidWorks / Fusion 360</div>
+      <div class="tool-item rv"><span class="ti-icon">🖨</span>Bambu Lab / OrcaSlicer</div>
+      <div class="tool-item rv"><span class="ti-icon">📐</span>MATLAB / Simulink</div>
+      <div class="tool-item rv"><span class="ti-icon">🐍</span>Python 3.11</div>
+      <div class="tool-item rv"><span class="ti-icon">⚛</span>React + Vite</div>
+      <div class="tool-item rv"><span class="ti-icon">🎬</span>GSAP + Three.js</div>
+      <div class="tool-item rv"><span class="ti-icon">🔌</span>KiCad PCB</div>
+      <div class="tool-item rv"><span class="ti-icon">🔬</span>Saleae Logic Analyzer</div>
+      <div class="tool-item rv"><span class="ti-icon">🀄</span>Anki (HSK)</div>
+      <!-- 🛠️ Add new tool items above here -->
+    </div>
+  </section>
+  <!-- END TOOLS ══════════════════════════════════════ -->
+
+
+  <!-- Cross-link navigation -->
+  <div class="cross-links">
+    <a href="main.html" class="cross-link-card">
+      <div>
+        <div class="clc-label">Previous</div>
+        <div class="clc-title">Home</div>
+      </div>
+      <div class="clc-arrow left">←</div>
+    </a>
+    <a href="education.html" class="cross-link-card" style="text-align:right; flex-direction:row-reverse;">
+      <div>
+        <div class="clc-label">Next</div>
+        <div class="clc-title">Education</div>
+      </div>
+      <div class="clc-arrow right">→</div>
+    </a>
+  </div>
+
+  <!-- Shared footer — matching main.html style -->
+  <footer class="site-footer">
+    <a href="main.html" class="foot-logo">IA<em>.</em></a>
+    <div class="foot-links">
+      <a href="about.html">About</a>
+      <a href="education.html">Education</a>
+      <a href="stack-hardware.html">Stack</a>
+      <a href="main.html#projects">Projects</a>
+      <a href="main.html#contact">Contact</a>
+    </div>
+    <div class="foot-copy">© <span class="yr"></span> ISHTIYAQ AHMAD. ALL RIGHTS RESERVED.</div>
+  </footer>
+
+  <script src="shared.js"></script>
+</body>
+</html>

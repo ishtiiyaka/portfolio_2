@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Education — Ishtiyaq Ahmad</title>
+
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="shared.css">
+
+  <!-- GSAP + ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+  <!-- Lenis smooth scroll. To remove: delete this line -->
+  <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+  <style>
+    /* ─── EDUCATION PAGE SPECIFIC STYLES ────────────────────────────────────
+       Layout: full-width vertical timeline with sidebar index on desktop.
+       Uses shared.css edu-phase, cert-card, roadmap-track classes.
+    ─────────────────────────────────────────────────────────────────────────── */
+
+    /* Hero banner */
+    .edu-hero {
+      background: var(--bg-dark);
+      padding: 10rem 5rem 5rem;
+      border-bottom: 1px solid var(--rule-dark);
+      position: relative;
+      overflow: hidden;
+    }
+    .edu-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 80% 50%, rgba(181,101,29,.12) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 80% at 10% 60%, rgba(26,58,110,.15) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .edu-hero-inner { position: relative; z-index: 1; max-width: 900px; }
+    .edu-hero-label {
+      font-family: var(--font-body);
+      font-size: var(--text-micro);
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--accent-2);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .edu-hero-label::before { content: ''; width: 32px; height: 1px; background: var(--accent-2); }
+    .edu-hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(3.5rem, 7vw, 7rem);
+      font-weight: 900;
+      line-height: 0.9;
+      letter-spacing: -0.04em;
+      color: var(--ink-light);
+      margin-bottom: 2rem;
+    }
+    .edu-hero-title em { font-style: italic; color: var(--accent-2); }
+    .edu-hero-desc {
+      font-family: var(--font-body);
+      font-size: var(--text-body);
+      line-height: 2;
+      color: var(--ink-faint);
+      max-width: 600px;
+    }
+
+    /* Two-column layout: sticky index sidebar + scrollable content */
+    .edu-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 6rem 4rem;
+      gap: 6rem;
+      align-items: start;
+    }
+
+    /* Sidebar index */
+    .edu-sidebar {
+      position: sticky;
+      top: 6rem;
+      height: fit-content;
+    }
+    .edu-sidebar-title {
+      font-family: var(--font-body);
+      font-size: var(--text-micro);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--ink-dim);
+      margin-bottom: 1.5rem;
+    }
+    .edu-index {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .edu-index a {
+      font-family: var(--font-body);
+      font-size: var(--text-small);
+      color: var(--ink-dim);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      padding: 0.6rem 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-left: 2px solid transparent;
+      transition: all var(--transition);
+    }
+    .edu-index a:hover,
+    .edu-index a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      padding-left: 1rem;
+    }
+    .edu-index .ei-num {
+      font-size: 0.52rem;
+      color: var(--rule);
+      letter-spacing: 0.1em;
+    }
+
+    /* Stat bar below sidebar */
+    .edu-sidebar-stat {
+      margin-top: 3rem;
+      padding: 1.5rem;
+      border: var(--border);
+      background: var(--bg-alt);
+    }
+    .ess-label {
+      font-family: var(--font-body);
+      font-size: var(--text-micro);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.4rem;
+    }
+    .ess-value {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--ink);
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+    .ess-sub {
+      font-family: var(--font-body);
+      font-size: var(--text-micro);
+      color: var(--ink-dim);
+      margin-top: 0.3rem;
+    }
+
+    /* Phase container */
+    .edu-phases { display: flex; flex-direction: column; }
+
+    /* Section divider between phases */
+    .edu-phase-divider {
+      height: 1px;
+      background: var(--rule);
+      margin: 4rem 0;
+    }
+
+    /* Courses grid */
+    .edu-courses-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1px;
+      background: var(--rule);
+      border: var(--border);
+      margin-top: 1.5rem;
+    }
+    .edu-course-item {
+      background: var(--bg);
+      padding: 1rem 1.25rem;
+      font-family: var(--font-body);
+      font-size: var(--text-micro);
+      color: var(--ink-dim);
+      letter-spacing: 0.08em;
+      transition: background var(--transition), color var(--transition);
+    }
+    .edu-course-item:hover { background: var(--bg-alt); color: var(--accent); }
+    .edu-course-item.highlight { color: var(--accent); background: rgba(181,101,29,.04); }
+
+    /* Skill progress rows (self-taught sections) */
+    .skill-progress-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .sp-row { display: flex; flex-direction: column; gap: 0.35rem; }
+    .sp-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .sp-name {
+      font-family: var(--font-body);
+      font-size: var(--text-small);
+      color: var(--ink-dim);
+    }
+    .sp-pct {
+      font-family: var(--font-body);
+      font-size: var(--text-micro);
+      color: var(--accent);
+      letter-spacing: 0.1em;
+    }
+    .sp-bar {
+      height: 2px;
+      background: var(--rule);
+      position: relative;
+      overflow: hidden;
+    }
+    .sp-fill {
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      background: linear-gradient(to right, var(--accent), var(--accent-2));
+      width: 0;
+      transition: width 1.4s cubic-bezier(.16,1,.3,1);
+    }
+
+    /* Certifications section override background */
+    #certifications { background: var(--bg-dark); }
+    .cert-section-wrap {
+      background: var(--bg-dark);
+      padding: 6rem 5rem;
+      border-top: 1px solid var(--rule-dark);
+    }
+    .cert-section-title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem,3vw,3rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: var(--ink-light);
+      margin-bottom: 0.5rem;
+    }
+    .cert-section-title em { font-style: italic; color: var(--accent-2); }
+    .cert-section-desc {
+      font-family: var(--font-body);
+      font-size: var(--text-body);
+      color: var(--ink-faint);
+      line-height: 1.9;
+      max-width: 700px;
+      margin-bottom: 3rem;
+    }
+
+    /* Roadmap section */
+    .roadmap-section {
+      padding: 6rem 5rem;
+      border-top: var(--border);
+      background: var(--bg-alt);
+    }
+    .roadmap-title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem,3vw,3rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+    }
+    .roadmap-title em { font-style: italic; color: var(--accent); }
+    .roadmap-desc {
+      font-family: var(--font-body);
+      font-size: var(--text-body);
+      color: var(--ink-dim);
+      line-height: 1.9;
+      max-width: 600px;
+      margin-bottom: 3rem;
+    }
+
+    @media (max-width: 960px) {
+      .edu-hero { padding: 8rem 2rem 3rem; }
+      .edu-layout { grid-template-columns: 1fr; padding: 4rem 2rem; gap: 3rem; }
+      .edu-sidebar { position: relative; top: 0; }
+      .edu-index { flex-direction: row; flex-wrap: wrap; gap: 0.4rem; }
+      .edu-index a { border-left: none; border-bottom: 2px solid transparent; padding: 0.4rem 0.6rem; }
+      .edu-index a:hover, .edu-index a.active { border-bottom-color: var(--accent); padding-left: 0.6rem; }
+      .cert-section-wrap, .roadmap-section { padding: 4rem 2rem; }
+      .edu-courses-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="cur"></div>
+  <div id="cur-ring"></div>
+  <div id="loader">
+    <div class="ld-logo">IA<em>.</em></div>
+    <div class="ld-bar"><div class="ld-fill" id="ld-fill-el"></div></div>
+  </div>
+
+  <!-- SECTION DOTS — remove to disable -->
+  <div id="section-dots"></div>
+
+  <!-- ══════════════════════════════════════════════════
+       NAV — Education is active
+       ══════════════════════════════════════════════════ -->
+  <nav class="main-nav" id="main-nav">
+    <a href="main.html" class="nav-logo">IA.</a>
+    <ul class="nav-links">
+      <li><a href="about.html">About</a></li>
+      <li><a href="education.html" class="active">Education</a></li>
+      <li><a href="stack-hardware.html">Stack</a></li>
+      <li><a href="main.html#projects">Projects</a></li>
+      <li><a href="main.html#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════════
+       HERO BANNER
+       ══════════════════════════════════════════════════ -->
+  <header class="edu-hero" id="hero">
+    <div class="edu-hero-inner">
+      <div class="edu-hero-label rv">EDU — Formation Record</div>
+      <h1 class="edu-hero-title rv">
+        Academic<br><em>Formation</em>
+      </h1>
+      <p class="edu-hero-desc rv">
+        A complete record of formal education, self-directed study tracks, and certifications explored.
+        From the mountains of Gilgit-Baltistan to UET Lahore's engineering faculty — the full timeline.
+      </p>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════
+       MAIN CONTENT: Sidebar + Timeline Phases
+       ══════════════════════════════════════════════════ -->
+  <div class="edu-layout">
+
+    <!-- Sidebar index -->
+    <aside class="edu-sidebar rv">
+      <div class="edu-sidebar-title">Contents</div>
+      <ul class="edu-index">
+        <li><a href="#uet"><span class="ei-num">01</span> UET Lahore</a></li>
+        <li><a href="#web-dev"><span class="ei-num">02</span> Web Engineering</a></li>
+        <li><a href="#embedded"><span class="ei-num">03</span> Embedded / Hardware</a></li>
+        <li><a href="#intermediate"><span class="ei-num">04</span> Intermediate FSc</a></li>
+        <li><a href="#matric"><span class="ei-num">05</span> Matric</a></li>
+        <li><a href="#certifications"><span class="ei-num">06</span> Certifications</a></li>
+        <li><a href="#roadmap"><span class="ei-num">07</span> Roadmap</a></li>
+      </ul>
+
+      <!-- Quick stat -->
+      <div class="edu-sidebar-stat rv">
+        <div class="ess-label">Currently Enrolled</div>
+        <div class="ess-value" data-count="2" data-count-suffix="nd">2nd</div>
+        <div class="ess-sub">Year — Mechatronics Eng. UET</div>
+      </div>
+      <div class="edu-sidebar-stat rv" style="margin-top:1px;">
+        <div class="ess-label">Self-Taught Tracks</div>
+        <div class="ess-value" data-count="5">5</div>
+        <div class="ess-sub">Active learning streams</div>
+      </div>
+    </aside>
+
+    <!-- Timeline phases -->
+    <main class="edu-phases">
+
+      <!-- ══════════════════════════════════════════════
+           PHASE 1: UET LAHORE
+           TO EDIT: update course tags, CGPA, description
+      ════════════════════════════════════════════════ -->
+      <section id="uet" class="edu-phase rv">
+        <div class="edu-phase-dot"></div>
+        <div class="edu-phase-year">2023 — Present</div>
+        <h2 class="edu-phase-title">UET Lahore</h2>
+        <div class="edu-phase-inst">
+          Bachelor of Engineering — Mechatronics &amp; Control Engineering<br>
+          University of Engineering &amp; Technology, Lahore, Pakistan
+        </div>
+
+        <!-- CGPA display — update data-count with actual CGPA -->
+        <div class="cgpa-display rv">
+          <div class="cgpa-num" data-count="3" data-count-suffix=".x">3.x</div>
+          <div class="cgpa-label">/ 4.0 — CGPA (In Progress)</div>
+        </div>
+
+        <div class="edu-phase-body rv">
+          <p>
+            Pursuing a four-year Bachelor of Engineering in <strong>Mechatronics and Control Engineering</strong>
+            at Pakistan's premier technical university. The programme sits at the intersection of mechanical
+            engineering, electronic systems, embedded software, and control theory — exactly where I want to operate.
+          </p>
+          <p>
+            My coursework emphasis is on real-time embedded systems, control system design, and mathematical
+            modelling of dynamic systems. Every theoretical concept is immediately applied to live hardware projects.
+          </p>
+        </div>
+
+        <!-- Course tags — TO ADD: copy a .edu-course-item. TO REMOVE: delete it -->
+        <div class="section-label rv" style="margin-top:2rem;">Core Courses</div>
+        <div class="edu-courses-grid rv">
+          <div class="edu-course-item highlight">Control Systems</div>
+          <div class="edu-course-item highlight">Embedded Systems Design</div>
+          <div class="edu-course-item highlight">Signals &amp; Systems</div>
+          <div class="edu-course-item highlight">Engineering Mathematics</div>
+          <div class="edu-course-item">Circuit Theory</div>
+          <div class="edu-course-item">Mechanics of Machines</div>
+          <div class="edu-course-item">Thermodynamics</div>
+          <div class="edu-course-item">Fluid Mechanics</div>
+          <div class="edu-course-item">MATLAB / Simulink</div>
+          <div class="edu-course-item">Digital Logic Design</div>
+          <div class="edu-course-item">Linear Algebra</div>
+          <div class="edu-course-item">Computer Programming (C)</div>
+          <!-- 🛠️ Add new courses above here -->
+        </div>
+      </section>
+
+      <div class="edu-phase-divider"></div>
+
+      <!-- ══════════════════════════════════════════════
+           PHASE 2: SELF-TAUGHT — WEB ENGINEERING
+           TO EDIT: update skills / progress values (data-w)
+      ════════════════════════════════════════════════ -->
+      <section id="web-dev" class="edu-phase rv">
+        <div class="edu-phase-dot"></div>
+        <div class="edu-phase-year">2022 — Present</div>
+        <h2 class="edu-phase-title">Web Engineering &amp; Creative Dev</h2>
+        <div class="edu-phase-inst">Self-Directed Study — Online Resources, Independent Projects</div>
+
+        <div class="edu-phase-body rv">
+          <p>
+            Parallel to formal education, I engineered my own curriculum in modern web development and
+            creative coding. The focus has never been on building generic websites — it has been on
+            mastering the tools that create <strong>immersive digital experiences</strong>.
+          </p>
+          <p>
+            Studied GSAP animation architecture, Three.js 3D rendering pipelines, React component systems,
+            and CSS architecture patterns. Everything tested immediately on real projects — including
+            this portfolio.
+          </p>
+        </div>
+
+        <!-- Skill progress bars — TO ADD: copy a .sp-row. data-w = fill % -->
+        <div class="section-label rv" style="margin-top:2rem;">Proficiency</div>
+        <div class="skill-progress-list rv">
+          <div class="sp-row">
+            <div class="sp-head">
+              <span class="sp-name">GSAP + ScrollTrigger</span>
+              <span class="sp-pct">90%</span>
+            </div>
+            <div class="sp-bar"><div class="sp-fill skill-fill" data-w="90"></div></div>
+          </div>
+          <div class="sp-row">
+            <div class="sp-head">
+              <span class="sp-name">Three.js / WebGL</span>
+              <span class="sp-pct">75%</span>
+            </div>
+            <div class="sp-bar"><div class="sp-fill skill-fill" data-w="75"></div></div>
+          </div>
+          <div class="sp-row">
+            <div class="sp-head">
+              <span class="sp-name">React / JavaScript</span>
+              <span class="sp-pct">87%</span>
+            </div>
+            <div class="sp-bar"><div class="sp-fill skill-fill" data-w="87"></div></div>
+          </div>
+          <div class="sp-row">
+            <div class="sp-head">
+              <span class="sp-name">CSS Architecture / Design Systems</span>
+              <span class="sp-pct">88%</span>
+            </div>
+            <div class="sp-bar"><div class="sp-fill skill-fill" data-w="88"></div></div>
+          </div>
+          <div class="sp-row">
+            <div class="sp-head">
+              <span class="sp-name">Python Automation / Scraping</span>
+              <span class="sp-pct">90%</span>
+            </div>
+            <div class="sp-bar"><div class="sp-fill skill-fill" data-w="90"></div></div>
+          </div>
+          <!-- 🛠️ Add new skill rows above here -->
+        </div>
+
+        <div class="edu-courses rv" style="margin-top:1.5rem;">
+          <span class="edu-course-tag active-course">GSAP</span>
+          <span class="edu-course-tag active-course">Three.js</span>
+          <span class="edu-course-tag active-course">React</span>
+          <span class="edu-course-tag">Lenis</span>
+          <span class="edu-course-tag">VanillaTilt</span>
+          <span class="edu-course-tag">CSS Custom Properties</span>
+          <span class="edu-course-tag">Selenium / BeautifulSoup</span>
+          <span class="edu-course-tag">Pandas / NumPy</span>
+        </div>
+      </section>
+
+      <div class="edu-phase-divider"></div>
+
+      <!-- ══════════════════════════════════════════════
+           PHASE 3: SELF-TAUGHT — EMBEDDED / HARDWARE
+      ════════════════════════════════════════════════ -->
+      <section id="embedded" class="edu-phase rv">
+        <div class="edu-phase-dot"></div>
+        <div class="edu-phase-year">2023 — Present</div>
+        <h2 class="edu-phase-title">Embedded Systems &amp; Hardware</h2>
+        <div class="edu-phase-inst">Self-Directed — Datasheets, Reference Manuals, Build-to-Learn</div>
+
+        <div class="edu-phase-body rv">
+          <p>
+            University teaches embedded systems at a surface level. I go deeper. My self-directed track
+            covers <strong>bare-metal ARM Cortex-M4F programming</strong> on the Texas Instruments TM4C123,
+            writing directly against hardware registers with no HAL abstractions.
+          </p>
+          <p>
+            Extended into FreeRTOS task scheduling, BLDC motor FOC commutation, PCB design with KiCad,
+            and hardware reverse engineering using logic analyzers. Every skill is battle-tested on a
+            real deployed project.
+          </p>
+        </div>
+
+        <div class="skill-progress-list rv">
+          <div class="sp-row">
+            <div class="sp-head"><span class="sp-name">Bare-Metal C (ARM Cortex-M4F)</span><span class="sp-pct">82%</span></div>
+            <div class="sp-bar"><div class="sp-fill skill-fill" data-w="82"></div></div>
+          </div>
+          <div class="sp-row">
+            <div class="sp-head"><span class="sp-name">FreeRTOS</span><span class="sp-pct">70%</span></div>
+            <div class="sp-bar"><div class="sp-fill skill-fill" data-w="70"></div></div>
+          </div>
+          <div class="sp-row">
+            <div class="sp-head"><span class="sp-name">BLDC / FOC Motor Control</span><span class="sp-pct">78%</span></div>
+            <div class="sp-bar"><div class="sp-fill skill-fill" data-w="78"></div></div>
+          </div>
+          <div class="sp-row">
+            <div class="sp-head"><span class="sp-name">KiCad PCB Design</span><span class="sp-pct">68%</span></div>
+            <div class="sp-bar"><div class="sp-fill skill-fill" data-w="68"></div></div>
+          </div>
+          <div class="sp-row">
+            <div class="sp-head"><span class="sp-name">Hardware Reverse Engineering</span><span class="sp-pct">80%</span></div>
+            <div class="sp-bar"><div class="sp-fill skill-fill" data-w="80"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="edu-phase-divider"></div>
+
+      <!-- ══════════════════════════════════════════════
+           PHASE 4: INTERMEDIATE FSc
+      ════════════════════════════════════════════════ -->
+      <section id="intermediate" class="edu-phase rv">
+        <div class="edu-phase-dot"></div>
+        <div class="edu-phase-year">2021 — 2023</div>
+        <h2 class="edu-phase-title">Intermediate — FSc Pre-Engineering</h2>
+        <div class="edu-phase-inst">Govt. Degree College, Gilgit — BISE Gilgit-Baltistan</div>
+
+        <div class="edu-phase-body rv">
+          <p>
+            Completed the Federal Board FSc Pre-Engineering programme with a focus on
+            <strong>Physics, Mathematics, and Chemistry</strong>. The mathematical foundation built
+            here — calculus, vectors, mechanics — underpins every engineering calculation I make today.
+          </p>
+        </div>
+
+        <div class="edu-courses rv">
+          <span class="edu-course-tag">Physics</span>
+          <span class="edu-course-tag">Mathematics</span>
+          <span class="edu-course-tag">Chemistry</span>
+          <span class="edu-course-tag">English</span>
+          <span class="edu-course-tag">Urdu</span>
+        </div>
+      </section>
+
+      <div class="edu-phase-divider"></div>
+
+      <!-- ══════════════════════════════════════════════
+           PHASE 5: MATRIC
+      ════════════════════════════════════════════════ -->
+      <section id="matric" class="edu-phase rv">
+        <div class="edu-phase-dot"></div>
+        <div class="edu-phase-year">2019 — 2021</div>
+        <h2 class="edu-phase-title">Matriculation — Science</h2>
+        <div class="edu-phase-inst">School, Gilgit-Baltistan — Federal Board of Intermediate &amp; Secondary Education</div>
+
+        <div class="edu-phase-body rv">
+          <p>
+            Completed Matriculation in the Science stream from Gilgit-Baltistan. The formative years
+            that sparked an interest in how physical systems operate — from basic electronics to the
+            mechanics of machines.
+          </p>
+        </div>
+
+        <div class="edu-courses rv">
+          <span class="edu-course-tag">Physics</span>
+          <span class="edu-course-tag">Mathematics</span>
+          <span class="edu-course-tag">Computer Science</span>
+          <span class="edu-course-tag">Biology / Chemistry</span>
+        </div>
+      </section>
+
+    </main>
+  </div>
+  <!-- END MAIN LAYOUT ══════════════════════════════════ -->
+
+
+  <!-- ══════════════════════════════════════════════════
+       CERTIFICATIONS SECTION
+       TO ADD A CERTIFICATION: copy a .cert-card block
+       TO REMOVE THIS SECTION: delete from here to END CERTS
+       ══════════════════════════════════════════════════ -->
+  <section id="certifications" class="cert-section-wrap">
+    <div style="max-width:1400px; margin:0 auto;">
+      <div class="section-label rv" style="color:var(--accent-2);">006 — Certifications &amp; Courses Explored</div>
+      <h2 class="cert-section-title rv">Certifications<br><em>Explored.</em></h2>
+      <p class="cert-section-desc rv">
+        Beyond the university curriculum, I actively research and pursue certifications that extend
+        into emerging and high-leverage domains. The following represent programmes I have specifically
+        investigated and am in the process of pursuing.
+      </p>
+
+      <div class="cert-grid rv">
+
+        <!-- ── Cert Card: Modern Robotics (Northwestern) ── -->
+        <div class="cert-card">
+          <div class="cert-org">Northwestern University</div>
+          <div class="cert-name">Modern Robotics Specialization</div>
+          <div class="cert-detail">
+            Six-course track covering Robot Kinematics, Dynamics, Planning, and Manipulation. Specifically
+            reviewed for Robot Kinematics and Dynamics modules — direct extension of UET control theory
+            into spatial robotics.
+          </div>
+          <div class="cert-status">Researched / In Queue</div>
+        </div>
+
+        <!-- ── Cert Card: Microsoft Generative AI ── -->
+        <div class="cert-card">
+          <div class="cert-org">Microsoft</div>
+          <div class="cert-name">Account Manager with Generative AI Certification</div>
+          <div class="cert-detail">
+            Microsoft's professional certification track integrating Generative AI tools into technical
+            workflows. Evaluated for AI-assisted engineering design pipelines and client communication
+            workflows.
+          </div>
+          <div class="cert-status">Considering Enrollment</div>
+        </div>
+
+        <!-- ── Cert Card: Cybersecurity ── -->
+        <div class="cert-card">
+          <div class="cert-org">Various Platforms</div>
+          <div class="cert-name">Cybersecurity Fundamentals</div>
+          <div class="cert-detail">
+            Explored cybersecurity fundamentals with specific interest in embedded system security,
+            firmware protection, and IoT attack surface analysis — directly applicable to connected
+            hardware projects.
+          </div>
+          <div class="cert-status">Exploring</div>
+        </div>
+
+        <!-- ── Cert Card: Generative AI ── -->
+        <div class="cert-card">
+          <div class="cert-org">Coursera / DeepLearning.AI</div>
+          <div class="cert-name">Generative AI for Engineers</div>
+          <div class="cert-detail">
+            Generative AI applied to engineering contexts: code generation, documentation automation,
+            and AI-assisted hardware design. Assessed multiple platform offerings for the most
+            technically rigorous track.
+          </div>
+          <div class="cert-status">Researched</div>
+        </div>
+
+        <!-- ── Cert Card: Financial Markets ── -->
+        <div class="cert-card">
+          <div class="cert-org">Yale / Coursera</div>
+          <div class="cert-name">Financial Markets &amp; Investments</div>
+          <div class="cert-detail">
+            Investigated Robert Shiller's Financial Markets course on Coursera. Interest driven by
+            understanding capital allocation for future hardware startup ventures and personal
+            investment strategy.
+          </div>
+          <div class="cert-status">Enquired</div>
+        </div>
+
+        <!-- ── Cert Card: Mandarin HSK ── -->
+        <div class="cert-card">
+          <div class="cert-org">Hanban / HSK Standard</div>
+          <div class="cert-name">Mandarin Chinese HSK Certification</div>
+          <div class="cert-detail">
+            Actively studying Mandarin Chinese using SRS (Anki). Target: HSK Level 3. Motivated by
+            direct access to Chinese hardware suppliers, PCB manufacturers (JLCPCB/LCSC), and native
+            technical datasheets.
+          </div>
+          <div class="cert-status">Active — HSK In Progress</div>
+        </div>
+
+        <!-- 🛠️ Add new cert-card blocks above here -->
+
+      </div>
+    </div>
+  </section>
+  <!-- END CERTS ══════════════════════════════════════════ -->
+
+
+  <!-- ══════════════════════════════════════════════════
+       LEARNING ROADMAP
+       TO ADD A NODE: copy a .rm-node block
+       class="done" = completed, class="current" = active, no class = future
+       TO REMOVE THIS SECTION: delete from here to END ROADMAP
+       ══════════════════════════════════════════════════ -->
+  <section id="roadmap" class="roadmap-section">
+    <div class="section-label rv">007 — Learning Path</div>
+    <h2 class="roadmap-title rv">The<br><em>Roadmap</em></h2>
+    <p class="roadmap-desc rv">
+      A visual representation of the formation path — from foundational schooling through current
+      university study and into future specialisation targets.
+    </p>
+
+    <div class="roadmap-track rv">
+      <div class="rm-node done">
+        <div class="rm-dot"></div>
+        <div class="rm-label">Matric<br>2021</div>
+      </div>
+      <div class="rm-node done">
+        <div class="rm-dot"></div>
+        <div class="rm-label">FSc<br>2023</div>
+      </div>
+      <div class="rm-node done">
+        <div class="rm-dot"></div>
+        <div class="rm-label">Web Dev<br>Self-Taught</div>
+      </div>
+      <div class="rm-node current">
+        <div class="rm-dot"></div>
+        <div class="rm-label">UET Lahore<br>2023–Now</div>
+      </div>
+      <div class="rm-node current">
+        <div class="rm-dot"></div>
+        <div class="rm-label">Embedded<br>Self-Taught</div>
+      </div>
+      <div class="rm-node">
+        <div class="rm-dot"></div>
+        <div class="rm-label">Modern<br>Robotics</div>
+      </div>
+      <div class="rm-node">
+        <div class="rm-dot"></div>
+        <div class="rm-label">AI / ML<br>Integration</div>
+      </div>
+      <div class="rm-node">
+        <div class="rm-dot"></div>
+        <div class="rm-label">UET Final<br>Year Thesis</div>
+      </div>
+      <!-- 🛠️ Add new roadmap nodes above here -->
+    </div>
+  </section>
+  <!-- END ROADMAP ══════════════════════════════════════ -->
+
+
+  <!-- Cross-link navigation -->
+  <div class="cross-links">
+    <a href="about.html" class="cross-link-card">
+      <div>
+        <div class="clc-label">Previous</div>
+        <div class="clc-title">About</div>
+      </div>
+      <div class="clc-arrow left">←</div>
+    </a>
+    <a href="stack-hardware.html" class="cross-link-card" style="text-align:right; flex-direction:row-reverse;">
+      <div>
+        <div class="clc-label">Next</div>
+        <div class="clc-title">Stack</div>
+      </div>
+      <div class="clc-arrow right">→</div>
+    </a>
+  </div>
+
+  <!-- Shared footer — matching main.html style -->
+  <footer class="site-footer">
+    <a href="main.html" class="foot-logo">IA<em>.</em></a>
+    <div class="foot-links">
+      <a href="about.html">About</a>
+      <a href="education.html">Education</a>
+      <a href="stack-hardware.html">Stack</a>
+      <a href="main.html#projects">Projects</a>
+      <a href="main.html#contact">Contact</a>
+    </div>
+    <div class="foot-copy">© <span class="yr"></span> ISHTIYAQ AHMAD. ALL RIGHTS RESERVED.</div>
+  </footer>
+
+  <script>
+    // ─── SIDEBAR SCROLL SPY ──────────────────────────────────────────────────
+    // Highlights the active index link based on which phase is in view.
+    // Uses the same pattern as stack pages' index-list spy.
+    const phases   = document.querySelectorAll('.edu-phase');
+    const idxLinks = document.querySelectorAll('.edu-index a');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      phases.forEach(sec => {
+        if (window.pageYOffset >= sec.offsetTop - 320) {
+          current = sec.getAttribute('id');
+        }
+      });
+      idxLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+      });
+    }, { passive: true });
+  </script>
+
+  <script src="shared.js"></script>
+</body>
+</html>

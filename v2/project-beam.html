@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 02: Self-Balancing Beam — Ishtiyaq Ahmad</title>
+
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="shared.css">
+
+<!-- GSAP + ScrollTrigger -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<style>
+/* ==========================================================================
+   🎨 THEME OVERRIDE: AEROSPACE / CONTROL SYSTEMS (Navy, Amber, Cyan)
+   ========================================================================== */
+:root {
+  --bg:          #030712;
+  --bg-alt:      #0f172a;
+  --bg-dark:     #030712;
+  --bg-dark-alt: #1e293b;
+  --ink:         #f8fafc;
+  --ink-dim:     #64748b;
+  --ink-light:   #f8fafc;
+  --ink-faint:   rgba(248,250,252,0.3);
+  --accent:      #f59e0b;
+  --accent-2:    #fbbf24;
+  --accent-blue: #06b6d4;
+  --rule:        rgba(6,182,212,0.15);
+  --rule-dark:   rgba(6,182,212,0.15);
+  --border:      1px solid rgba(6,182,212,0.15);
+  --border-dark: 1px solid rgba(6,182,212,0.15);
+  --green:       #4ade80;
+  --white:       #f8fafc;
+}
+
+/* ─── DYNAMIC BACKGROUND ─── */
+.radar-bg {
+  position: fixed; inset: 0; z-index: -1;
+  background-image: 
+    linear-gradient(rgba(245,158,11,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,158,11,0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-position: center center;
+}
+.radar-sweep {
+  position: fixed; top: 50%; left: 50%;
+  width: 150vw; height: 150vw;
+  background: conic-gradient(from 0deg, transparent 70%, rgba(6,182,212,0.05) 100%);
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+  animation: sweep 8s linear infinite;
+  pointer-events: none; z-index: -1;
+}
+@keyframes sweep { to { transform: translate(-50%,-50%) rotate(360deg); } }
+
+/* ─── CURSOR OVERRIDES (amber crosshair) ─── */
+#cur {
+  width: 2px; height: 20px;
+  background: var(--accent);
+  border-radius: 0;
+  mix-blend-mode: normal;
+  transition: height .2s;
+}
+#cur::after {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  width: 20px; height: 2px; background: var(--accent);
+  transform: translate(-50%,-50%);
+}
+#cur-ring { mix-blend-mode: normal; border-color: rgba(245,158,11,.3); }
+body.hov #cur { height: 40px; background: var(--accent-blue); }
+body.hov #cur::after { width: 40px; background: var(--accent-blue); }
+
+/* ─── PROJECT NAV OVERRIDE ─── */
+.project-nav { background: linear-gradient(to bottom, rgba(3,7,18,0.9), transparent); }
+.nav-back { color: var(--accent-blue); }
+.nav-back:hover { color: var(--accent); }
+.nav-badge { font-size: .6rem; color: var(--accent); letter-spacing: .2em; }
+
+/* ─── HEADER ─── */
+.header-hero {
+  padding: 10rem 4rem 4rem; max-width: 1400px; margin: 0 auto;
+  border-bottom: var(--border);
+}
+.h-meta {
+  font-family: var(--font-label); font-size: .75rem; letter-spacing: .3em;
+  color: var(--accent); text-transform: uppercase; margin-bottom: 2rem;
+  display: flex; gap: 2rem;
+}
+.h-title {
+  font-family: var(--font-display); font-size: clamp(3.5rem, 6vw, 6rem);
+  font-weight: 900; line-height: .9; letter-spacing: -.03em;
+  margin-bottom: 2rem; text-shadow: 0 0 40px rgba(6,182,212,0.2);
+  color: var(--ink);
+}
+.h-desc { font-size: 1rem; line-height: 1.8; color: var(--ink-dim); max-width: 700px; }
+
+/* ─── CONTENT GRID ─── */
+.content-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  max-width: 1400px; margin: 0 auto; padding: 4rem; gap: 4rem;
+}
+
+/* ─── TEXT BLOCKS ─── */
+.text-block h3 {
+  font-family: var(--font-label); font-size: 1.2rem; color: var(--accent-blue);
+  text-transform: uppercase; letter-spacing: .1em; margin-bottom: 1.5rem;
+}
+.text-block p { font-size: .85rem; line-height: 2.1; color: var(--ink); margin-bottom: 1.5rem; opacity: .8; }
+.text-block strong { color: var(--accent); }
+
+/* ─── PANELS ─── */
+.data-panel {
+  background: var(--bg-alt); border: var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,.5);
+}
+.dp-head {
+  background: var(--bg-dark-alt); padding: 1rem; font-size: .65rem;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: var(--ink-dim); display: flex; justify-content: space-between;
+  border-bottom: var(--border);
+}
+
+/* ─── SIMULATION: BALANCING BEAM ─── */
+.sim-container { height: 250px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+.fulcrum { position: absolute; bottom: 20px; width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-bottom: 40px solid var(--ink-dim); }
+.beam {
+  position: absolute; bottom: 60px; width: 60%; height: 8px; background: var(--ink);
+  transform-origin: center center; animation: balance 6s ease-in-out infinite;
+}
+.motor { position: absolute; top: -15px; width: 30px; height: 38px; background: var(--accent-blue); border-radius: 4px; box-shadow: 0 0 15px rgba(6,182,212,.4); }
+.motor.left { left: 0; }
+.motor.right { right: 0; background: var(--accent); box-shadow: 0 0 15px rgba(245,158,11,.4); }
+.prop { position: absolute; top: -5px; left: -10px; width: 50px; height: 2px; background: rgba(255,255,255,.8); animation: spinProp .1s linear infinite; }
+@keyframes spinProp { to { transform: rotateY(180deg); } }
+@keyframes balance {
+  0%,100%{transform:rotate(0deg)}
+  15%{transform:rotate(-12deg)}
+  30%{transform:rotate(8deg)}
+  45%{transform:rotate(-4deg)}
+  60%{transform:rotate(2deg)}
+  75%{transform:rotate(-1deg)}
+}
+
+/* ─── MATH VISUALIZATION ─── */
+.math-vis { padding: 2rem; font-family: var(--font-display); font-size: 1.2rem; color: var(--ink); text-align: center; }
+.bracket { font-size: 3rem; font-weight: 100; color: var(--accent-blue); }
+
+/* ─── SPECS GRID ─── */
+.specs-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+  background: var(--rule-dark); border-top: var(--border);
+}
+.spec-box { background: var(--bg-dark-alt); padding: 1.2rem 1rem; }
+.sb-label { font-size: .55rem; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: .5rem; }
+.sb-value { font-family: var(--font-label); font-size: .88rem; font-weight: 700; color: var(--ink-light); line-height: 1.3; }
+
+/* ─── PROJECT PHOTO SLOTS ─── */
+.proj-img-row { display:grid;gap:2px;background:rgba(6,182,212,.1);margin:3rem 0; }
+.proj-img-row.cols-3 { grid-template-columns:1fr 1fr 1fr; }
+.proj-img-row.cols-2 { grid-template-columns:2fr 1fr; }
+.proj-img-row.cols-1 { grid-template-columns:1fr; }
+figure.proj-ph { margin:0;position:relative;overflow:hidden;background:var(--bg-alt);border:1px dashed rgba(6,182,212,.25);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;cursor:pointer;transition:border-color .3s,background .3s; }
+figure.proj-ph:hover { border-color:var(--accent);background:rgba(245,158,11,.06); }
+figure.proj-ph img { width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:block; }
+.ph-body { display:flex;flex-direction:column;align-items:center;gap:.6rem;padding:2rem;text-align:center;position:relative;z-index:1; }
+.ph-icon { font-size:2rem;opacity:.4; }
+.ph-label { font-family:var(--font-label);font-size:.65rem;font-weight:700;letter-spacing:.35em;text-transform:uppercase;color:var(--accent);opacity:.8; }
+.ph-hint  { font-family:var(--font-body);font-size:.55rem;letter-spacing:.15em;color:var(--ink-dim);opacity:.5; }
+figcaption.ph-cap { background:var(--bg-dark-alt);padding:.5rem 1rem;font-family:var(--font-body);font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim);border-top:var(--border);text-align:center; }
+figure.proj-ph.tall  { min-height:300px; }
+figure.proj-ph.short { min-height:140px; }
+figure.proj-ph.wide  { min-height:260px; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 960px) {
+  .content-grid { grid-template-columns: 1fr; padding: 2rem; gap: 4rem; }
+  .h-title { font-size: 3rem; }
+  .header-hero { padding: 8rem 2rem 2rem; }
+  .proj-img-row.cols-3,.proj-img-row.cols-2 { grid-template-columns:1fr 1fr; }
+}
+@media (max-width:600px) {
+  .proj-img-row.cols-3,.proj-img-row.cols-2 { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div class="radar-bg"></div>
+<div class="radar-sweep"></div>
+
+<div id="loader">
+  <div class="ld-logo">IA<em>.</em></div>
+  <div class="ld-bar"><div class="ld-fill" id="ld-fill-el"></div></div>
+</div>
+
+<div id="section-dots"></div>
+
+<!-- NAV -->
+<nav class="project-nav">
+  <a href="main.html" class="nav-back">Abort to Main OS</a>
+  <div class="nav-badge">PID: ACTIVE</div>
+</nav>
+
+<header class="header-hero rv">
+  <div class="h-meta">
+    <span>PRJ_02</span>
+    <span>Control Systems</span>
+  </div>
+  <h1 class="h-title">Self-Balancing<br>Dual-Arm Beam</h1>
+  <p class="h-desc">An advanced mechatronic control system designed to stabilize a highly dynamic, non-linear physical structure using high-torque BLDC motors, FOC commutation, and 6-DoF sensor fusion.</p>
+</header>
+
+<main class="content-grid">
+  
+  <!-- LEFT COL -->
+  <div class="text-block rv">
+    <h3>The Control Problem</h3>
+    <p>Balancing a dual-arm beam is an inverted pendulum problem scaled up. The system is inherently unstable; any deviation from the horizontal plane accelerates gravity's pull, requiring immediate, calculated counter-thrust.</p>
+    <p>I architected the solution around a <strong>Texas Instruments TM4C123G</strong> microcontroller running bare-metal C. Instead of basic brushed DC motors, the system utilizes <strong>Brushless DC (BLDC) motors</strong> driven by Field Oriented Control (FOC) for instantaneous torque delivery without the latency of mechanical brushes.</p>
+    
+    <h3 style="margin-top: 3rem;">State-Space &amp; PID Cascade</h3>
+    <p>A simple PID loop is insufficient for the complex dynamics of dual rotors. The architecture employs a <strong>Cascaded Control Loop</strong>:</p>
+    <p>1. The <strong>Outer Loop</strong> monitors the MPU6050 (filtered via Madgwick) to calculate the angular error from the 0° setpoint.</p>
+    <p>2. The <strong>Inner Loop</strong> takes the output of the outer loop as a rate-of-change target, driving the high-speed SVPWM signals to the motor drivers.</p>
+    <p>This was mathematically modeled in MATLAB prior to hardware deployment using <strong>State-Space representation (ẋ = Ax + Bu)</strong> to prove Lyapunov stability.</p>
+  </div>
+
+  <!-- RIGHT COL -->
+  <div class="rv" style="display:flex;flex-direction:column;gap:3rem;">
+    
+    <!-- Sim Panel -->
+    <div class="data-panel">
+      <div class="dp-head">
+        <span>Live Kinematic Simulation</span>
+        <span>Err: <span style="color:var(--accent);">±1.2°</span></span>
+      </div>
+      <div class="sim-container">
+        <div class="fulcrum"></div>
+        <div class="beam">
+          <div class="motor left"><div class="prop"></div></div>
+          <div class="motor right"><div class="prop"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Math Panel -->
+    <div class="data-panel">
+      <div class="dp-head">
+        <span>State-Space Matrix</span>
+        <span style="color:var(--accent-blue);">LQR Derived</span>
+      </div>
+      <div class="math-vis">
+        <div style="display:flex;align-items:center;justify-content:center;gap:1rem;">
+          <span style="font-style:italic;">ẋ</span> = 
+          <span class="bracket">[</span>
+          <div style="display:flex;flex-direction:column;font-size:1rem;gap:1rem;">
+            <span>0 &nbsp;&nbsp;&nbsp; 1 &nbsp;&nbsp;&nbsp; 0 &nbsp;&nbsp;&nbsp; 0</span>
+            <span>22.4 &nbsp; 0 &nbsp; -2.1 &nbsp; 0</span>
+            <span>0 &nbsp;&nbsp;&nbsp; 0 &nbsp;&nbsp;&nbsp; 0 &nbsp;&nbsp;&nbsp; 1</span>
+            <span>-1.2 &nbsp; 0 &nbsp;&nbsp; 4.5 &nbsp; 0</span>
+          </div>
+          <span class="bracket">]</span>
+          <span style="font-style:italic;">x</span> + 
+          <span class="bracket">[</span>
+          <div style="display:flex;flex-direction:column;font-size:1rem;gap:1rem;">
+            <span>0</span><span>0.8</span><span>0</span><span>-0.4</span>
+          </div>
+          <span class="bracket">]</span>
+          <span style="font-style:italic;">u</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ PHOTO GALLERY — beam hardware & test ══════════════════════════════
+       Replace .proj-ph body with <img src="…" alt="…"> for real photos
+  ═════════════════════════════════════════════════════════════════════════ -->
+  <!-- Full-width hero: complete assembled beam system -->
+  <div class="proj-img-row cols-1 rv" style="grid-column:1/-1;margin-top:3rem;">
+    <figure class="proj-ph tall">
+      <div class="ph-body">
+        <div class="ph-icon">⚖️</div>
+        <div class="ph-label">Assembled Dual-Arm Beam — Balancing</div>
+        <div class="ph-hint">beam_assembled.jpg</div>
+      </div>
+      <figcaption class="ph-cap">Full System — BLDC Motors, MPU6050, TM4C123G MCU — Actively Balancing</figcaption>
+    </figure>
+  </div>
+
+  <!-- 3-across: MCU board, motor + driver, sensor closeup -->
+  <div class="proj-img-row cols-3 rv" style="grid-column:1/-1;margin-top:2px;">
+    <figure class="proj-ph">
+      <div class="ph-body">
+        <div class="ph-icon">💾</div>
+        <div class="ph-label">TM4C123G Board</div>
+        <div class="ph-hint">tm4c_board.jpg</div>
+      </div>
+      <figcaption class="ph-cap">TI TM4C123GH6PM — ARM Cortex-M4F @ 80 MHz</figcaption>
+    </figure>
+    <figure class="proj-ph">
+      <div class="ph-body">
+        <div class="ph-icon">⚙️</div>
+        <div class="ph-label">BLDC Motor + Driver</div>
+        <div class="ph-hint">bldc_motor.jpg</div>
+      </div>
+      <figcaption class="ph-cap">FOC Commutation — ESC + Phase Current Sensing</figcaption>
+    </figure>
+    <figure class="proj-ph">
+      <div class="ph-body">
+        <div class="ph-icon">📐</div>
+        <div class="ph-label">MPU6050 IMU Module</div>
+        <div class="ph-hint">mpu6050.jpg</div>
+      </div>
+      <figcaption class="ph-cap">6-DoF — Accelerometer + Gyroscope Fusion</figcaption>
+    </figure>
+  </div>
+
+  <!-- 2-col: MATLAB simulation plot + fault interrupt oscilloscope -->
+  <div class="proj-img-row cols-2 rv" style="grid-column:1/-1;margin-top:2px;">
+    <figure class="proj-ph wide">
+      <div class="ph-body">
+        <div class="ph-icon">📈</div>
+        <div class="ph-label">MATLAB Step-Response Plot</div>
+        <div class="ph-hint">matlab_step_response.png</div>
+      </div>
+      <figcaption class="ph-cap">Simulink PID Simulation — Settling Time &lt; 0.8s</figcaption>
+    </figure>
+    <figure class="proj-ph wide">
+      <div class="ph-body">
+        <div class="ph-icon">🔬</div>
+        <div class="ph-label">Fault Interrupt — Oscilloscope</div>
+        <div class="ph-hint">fault_interrupt_scope.jpg</div>
+      </div>
+      <figcaption class="ph-cap">ACS712 Over-Current — PWM Kill in &lt; 12 µs</figcaption>
+    </figure>
+  </div>
+
+  <!-- BOTTOM SPAN -->
+  <div class="text-block rv" style="grid-column:1/-1;margin-top:2rem;border-top:var(--border);padding-top:4rem;">
+    <h3>Hardware Fault Protection</h3>
+    <p style="max-width:800px;">Control theory fails when hardware burns. I integrated <strong>ACS712 Hall-Effect current sensors</strong> directly inline with the BLDC phases. The TM4C's internal ADC samples these lines at 1M/s. If the beam strikes an object or a rotor stalls, the current spikes instantly. The bare-metal firmware triggers a high-priority <strong>Hardware Fault Interrupt</strong>, killing the PWM signals within 12 microseconds, saving the MOSFETs from thermal runaway and preventing physical destruction.</p>
+  </div>
+
+</main>
+
+<!-- Cross-link navigation -->
+<div class="cross-links" style="border-top:var(--border);">
+  <a href="project-bcm.html" class="cross-link-card" style="background:var(--bg-alt);">
+    <div>
+      <div class="clc-label" style="color:var(--accent);">Previous</div>
+      <div class="clc-title" style="color:var(--ink);">Custom BCM</div>
+    </div>
+    <div class="clc-arrow left" style="color:var(--ink-dim);">←</div>
+  </a>
+  <a href="project-1170.html" class="cross-link-card" style="text-align:right;flex-direction:row-reverse;background:var(--bg-alt);">
+    <div>
+      <div class="clc-label" style="color:var(--accent);">Next</div>
+      <div class="clc-title" style="color:var(--ink);">Project 1170</div>
+    </div>
+    <div class="clc-arrow right" style="color:var(--ink-dim);">→</div>
+  </a>
+</div>
+
+<footer class="site-footer">
+  <a href="main.html" class="foot-logo">IA<em>.</em></a>
+  <div class="foot-links">
+    <a href="about.html">About</a>
+    <a href="education.html">Education</a>
+    <a href="stack-hardware.html">Stack</a>
+    <a href="main.html#projects">Projects</a>
+    <a href="main.html#contact">Contact</a>
+  </div>
+  <div class="foot-copy">© <span class="yr"></span> ISHTIYAQ AHMAD. ALL RIGHTS RESERVED.</div>
+</footer>
+
+<script src="shared.js"></script>
+</body>
+</html>

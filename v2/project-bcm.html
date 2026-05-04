@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 03: Custom BCM — Ishtiyaq Ahmad</title>
+
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="shared.css">
+
+<!-- GSAP + ScrollTrigger -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<style>
+/* ==========================================================================
+   🎨 THEME OVERRIDE: CREAM / COPPER — Matches main.html light mode
+   ========================================================================== */
+
+/* Project nav override — transparent over cream */
+.project-nav {
+  mix-blend-mode: multiply;
+  background: linear-gradient(to bottom, var(--bg), transparent);
+}
+.nav-back { color: var(--ink-dim); }
+.nav-back:hover { color: var(--accent); }
+.nav-badge { color: var(--accent); }
+.nav-badge::before {
+  content: ''; width: 6px; height: 6px; background: var(--accent);
+  animation: blink 1.2s step-end infinite; border-radius: 50%;
+  display: inline-block; margin-right: .5rem;
+}
+
+/* ─── HEADER ─── */
+.header-hero {
+  padding: 12rem 4rem 4rem; max-width: 1400px; margin: 0 auto;
+}
+.h-meta {
+  font-family: var(--font-label); font-size: .75rem; letter-spacing: .3em;
+  color: var(--accent); text-transform: uppercase; margin-bottom: 2rem;
+  display: flex; gap: 2rem;
+}
+.h-title {
+  font-family: var(--font-display); font-size: clamp(3rem, 5.5vw, 5.5rem);
+  font-weight: 900; line-height: 1; letter-spacing: -.03em;
+  margin-bottom: 2rem; color: var(--ink);
+}
+.h-desc { font-size: 1rem; line-height: 1.8; color: var(--ink-dim); max-width: 750px; }
+
+/* ─── CONTENT GRID ─── */
+.content-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  max-width: 1400px; margin: 0 auto; padding: 4rem; gap: 4rem;
+}
+
+/* ─── TEXT BLOCKS ─── */
+.text-block h3 {
+  font-family: var(--font-label); font-size: 1.2rem; color: var(--ink);
+  text-transform: uppercase; letter-spacing: .1em; margin-bottom: 1.5rem;
+}
+.text-block p { font-size: .85rem; line-height: 2.1; color: var(--ink-dim); margin-bottom: 1.5rem; }
+.text-block strong { color: var(--ink); font-weight: 500; }
+
+/* ─── DARK TERMINAL PANELS ─── */
+.data-panel {
+  background: var(--bg-dark); border: var(--border-dark);
+  display: flex; flex-direction: column; overflow: hidden;
+  position: relative; color: var(--ink-light);
+}
+.dp-head {
+  background: #0a0908; padding: 1rem; font-size: .65rem; letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--ink-dim); display: flex; justify-content: space-between;
+  border-bottom: var(--border-dark);
+}
+
+/* ─── VIS 1: CO-PROCESSOR ARCHITECTURE ─── */
+.vis-arch {
+  padding: 3rem 2rem; display: flex; align-items: center;
+  justify-content: center; gap: 2rem; position: relative;
+}
+.mcu-node {
+  border: var(--border-dark); background: #1a1815;
+  padding: 1.5rem; text-align: center; z-index: 2;
+  position: relative; border-radius: 4px; width: 140px;
+}
+.mcu-node.primary { border-color: var(--accent); }
+.mcu-node.secondary { border-color: var(--accent-blue); }
+.mcu-title { font-family: var(--font-label); font-size: 1rem; font-weight: 700; color: var(--ink-light); margin-bottom: .5rem; }
+.mcu-sub { font-size: .55rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .1em; }
+.uart-bus {
+  flex: 1; height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-blue));
+  position: relative; display: flex; justify-content: center; align-items: center;
+}
+.uart-lbl { position: absolute; top: -20px; font-size: .55rem; color: var(--ink-dim); letter-spacing: .2em; text-transform: uppercase; }
+.uart-pulse {
+  width: 10px; height: 10px; background: var(--ink-light); border-radius: 50%;
+  animation: pulseData 1.5s infinite alternate;
+  box-shadow: 0 0 10px rgba(242,237,228,.5);
+}
+@keyframes pulseData { 0%{transform:translateX(-40px)} 100%{transform:translateX(40px)} }
+
+/* ─── VIS 2: FREERTOS SCHEDULER ─── */
+.vis-rtos { padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
+.task-row { display: flex; flex-direction: column; gap: .5rem; }
+.task-head {
+  display: flex; justify-content: space-between; font-size: .65rem;
+  color: var(--ink-light); text-transform: uppercase; letter-spacing: .1em;
+}
+.task-head .pri { color: var(--accent-2); }
+.task-bar-bg { width: 100%; height: 6px; background: var(--rule-dark); border-radius: 3px; overflow: hidden; }
+.task-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; width: 0%; transition: width 1.5s cubic-bezier(.16,1,.3,1); }
+.task-bar-fill.safe { background: var(--accent-blue); }
+
+/* ─── CAN BUS VIS ─── */
+.vis-can {
+  height: 220px; overflow: hidden; position: relative; padding: 1rem;
+  font-size: .65rem; color: var(--ink-faint);
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+.can-feed { display: flex; flex-direction: column; gap: .5rem; animation: canScroll 2s linear infinite; }
+.can-msg {
+  display: flex; gap: 1rem; align-items: center;
+  border-bottom: 1px dashed var(--rule-dark); padding-bottom: .2rem;
+}
+.c-time { color: var(--ink-faint); }
+.c-id { color: var(--accent-2); font-weight: bold; width: 60px; }
+.c-dlc { color: var(--ink-dim); width: 40px; }
+.c-data { color: var(--ink-light); letter-spacing: .1em; }
+.c-data span.hl { color: var(--accent); }
+@keyframes canScroll { 0%{transform:translateY(20px);opacity:.8} 100%{transform:translateY(0);opacity:1} }
+
+/* ─── SPECS GRID ─── */
+.specs-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+  background: var(--rule-dark); border-top: var(--border-dark);
+}
+.spec-box { background: #0a0908; padding: 1.2rem 1rem; }
+.sb-label { font-size: .55rem; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: .5rem; }
+.sb-value { font-family: var(--font-label); font-size: .85rem; font-weight: 700; color: var(--ink-light); line-height: 1.3; }
+
+/* ─── PROJECT PHOTO SLOTS ─── */
+.proj-img-row { display:grid;gap:2px;background:rgba(181,101,29,.12);margin:3rem 0; }
+.proj-img-row.cols-3 { grid-template-columns:1fr 1fr 1fr; }
+.proj-img-row.cols-2 { grid-template-columns:2fr 1fr; }
+.proj-img-row.cols-1 { grid-template-columns:1fr; }
+figure.proj-ph { margin:0;position:relative;overflow:hidden;background:#0a0908;border:1px dashed rgba(181,101,29,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;cursor:pointer;transition:border-color .3s,background .3s; }
+figure.proj-ph:hover { border-color:var(--accent);background:rgba(181,101,29,.06); }
+figure.proj-ph img { width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:block; }
+.ph-body { display:flex;flex-direction:column;align-items:center;gap:.6rem;padding:2rem;text-align:center;position:relative;z-index:1; }
+.ph-icon { font-size:2rem;opacity:.4; }
+.ph-label { font-family:var(--font-label);font-size:.65rem;font-weight:700;letter-spacing:.35em;text-transform:uppercase;color:var(--accent);opacity:.8; }
+.ph-hint  { font-family:var(--font-body);font-size:.55rem;letter-spacing:.15em;color:var(--ink-faint);opacity:.7; }
+figcaption.ph-cap { background:#0a0908;padding:.5rem 1rem;font-family:var(--font-body);font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim);border-top:var(--border-dark);text-align:center; }
+figure.proj-ph.tall  { min-height:300px; }
+figure.proj-ph.short { min-height:140px; }
+figure.proj-ph.wide  { min-height:260px; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 960px) {
+  .content-grid { grid-template-columns: 1fr; padding: 2rem; gap: 4rem; }
+  .h-title { font-size: 3.5rem; }
+  .header-hero { padding: 8rem 2rem 2rem; }
+  .vis-arch { flex-direction: column; }
+  .uart-bus { width: 2px; height: 60px; background: linear-gradient(180deg, var(--accent), var(--accent-blue)); }
+  .proj-img-row.cols-3,.proj-img-row.cols-2 { grid-template-columns:1fr 1fr; }
+}
+@media (max-width:600px) {
+  .proj-img-row.cols-3,.proj-img-row.cols-2 { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+
+<div id="loader">
+  <div class="ld-logo">IA<em>.</em></div>
+  <div class="ld-bar"><div class="ld-fill" id="ld-fill-el"></div></div>
+</div>
+
+<div id="section-dots"></div>
+
+<!-- NAV -->
+<nav class="project-nav">
+  <a href="main.html" class="nav-back">Return to Main OS</a>
+  <div class="nav-badge">CAN GW: ONLINE</div>
+</nav>
+
+<header class="header-hero rv">
+  <div class="h-meta">
+    <span>PRJ_03</span>
+    <span>Automotive Embedded</span>
+  </div>
+  <h1 class="h-title">Custom Automotive<br>Body Control Module</h1>
+  <p class="h-desc">A fully configurable, dual-processor gateway designed to manage vehicle electrical systems. Features real-time RTOS scheduling, persistent FRAM memory, and wireless CAN bus telemetry via WebSocket integration.</p>
+</header>
+
+<main class="content-grid">
+  
+  <!-- LEFT COL -->
+  <div class="text-block rv">
+    <h3>The Hardware Architecture</h3>
+    <p>A client required a universal Body Control Module (BCM) that could be adapted to disparate vehicle setups (handling lights, wipers, and dashboard signals) without ever needing to modify the core firmware logic.</p>
+    <p>I engineered a dual-core architecture. The <strong>STM32F4</strong> handles all mission-critical real-time I/O and acts as the primary CAN bus gateway. Alongside it, an <strong>ESP32</strong> co-processor manages the wireless stack, communicating with the STM32 over a high-speed UART bridge.</p>
+    
+    <h3 style="margin-top: 3rem;">Persistent Modular State</h3>
+    <p>To make the system universal, every configuration parameter—voltage thresholds, pin mappings, and I/O behavior logic—is stored in an onboard <strong>FRAM (Ferroelectric RAM)</strong> chip. Unlike EEPROM, FRAM allows for virtually infinite write cycles without wear.</p>
+    <p>If power is cut during operation, the exact vehicle state is instantly recovered upon reboot. Furthermore, every memory read passes through a strict <strong>CRC-16 validation check</strong>. If data corruption is detected, the STM32 defaults to a hard-coded safe state, preventing catastrophic electrical actuation.</p>
+  </div>
+
+  <!-- RIGHT COL -->
+  <div class="rv" style="display:flex;flex-direction:column;gap:3rem;">
+    
+    <!-- Architecture Panel -->
+    <div class="data-panel">
+      <div class="dp-head">
+        <span>Co-Processor Topology</span>
+        <span style="color:var(--ink-dim);">UART Bridge</span>
+      </div>
+      <div class="vis-arch">
+        <div class="mcu-node primary">
+          <div class="mcu-title">STM32F4</div>
+          <div class="mcu-sub">Control / CAN / I/O</div>
+        </div>
+        <div class="uart-bus">
+          <div class="uart-lbl">UART TX/RX</div>
+          <div class="uart-pulse"></div>
+        </div>
+        <div class="mcu-node secondary">
+          <div class="mcu-title">ESP32</div>
+          <div class="mcu-sub">WiFi / BLE / OTA</div>
+        </div>
+      </div>
+      <div class="specs-grid">
+        <div class="spec-box"><div class="sb-label">Memory</div><div class="sb-value">Non-Volatile FRAM</div></div>
+        <div class="spec-box"><div class="sb-label">Integrity</div><div class="sb-value">CRC-16 Check: <span style="color:var(--accent-2);">PASS</span></div></div>
+      </div>
+    </div>
+
+    <!-- FreeRTOS Panel -->
+    <div class="data-panel">
+      <div class="dp-head">
+        <span>FreeRTOS Scheduler</span>
+        <span style="color:var(--ink-dim);">Deterministic</span>
+      </div>
+      <div class="vis-rtos">
+        <div class="task-row">
+          <div class="task-head"><span>vTask_CAN_Gateway</span><span class="pri">PRI: HIGH</span></div>
+          <div class="task-bar-bg"><div class="task-bar-fill fill-anim" data-w="85"></div></div>
+        </div>
+        <div class="task-row">
+          <div class="task-head"><span>vTask_IO_Control</span><span class="pri">PRI: MED</span></div>
+          <div class="task-bar-bg"><div class="task-bar-fill fill-anim" data-w="60"></div></div>
+        </div>
+        <div class="task-row">
+          <div class="task-head"><span>vTask_UART_Telemetry</span><span class="pri" style="color:var(--ink-dim);">PRI: LOW</span></div>
+          <div class="task-bar-bg"><div class="task-bar-fill safe fill-anim" data-w="30"></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ PHOTO GALLERY — BCM hardware photos ════════════════════════════════
+       Replace .proj-ph body with <img src="…" alt="…"> for real photos
+  ═════════════════════════════════════════════════════════════════════════ -->
+  <!-- 3-across: PCB top, wiring loom, installed in vehicle -->
+  <div class="proj-img-row cols-3 rv" style="grid-column:1/-1;margin-top:3rem;">
+    <figure class="proj-ph tall">
+      <div class="ph-body">
+        <div class="ph-icon">🔧</div>
+        <div class="ph-label">BCM PCB — Top View</div>
+        <div class="ph-hint">bcm_pcb_top.jpg</div>
+      </div>
+      <figcaption class="ph-cap">STM32F4 + ESP32 Dual-Processor Board</figcaption>
+    </figure>
+    <figure class="proj-ph tall">
+      <div class="ph-body">
+        <div class="ph-icon">🚗</div>
+        <div class="ph-label">In-Vehicle Install</div>
+        <div class="ph-hint">bcm_installed.jpg</div>
+      </div>
+      <figcaption class="ph-cap">Mounted Behind Dashboard — Wired to CAN Bus</figcaption>
+    </figure>
+    <figure class="proj-ph tall">
+      <div class="ph-body">
+        <div class="ph-icon">📡</div>
+        <div class="ph-label">WebSocket Dashboard</div>
+        <div class="ph-hint">websocket_dashboard.png</div>
+      </div>
+      <figcaption class="ph-cap">Live Telemetry — Browser-Based, No App Required</figcaption>
+    </figure>
+  </div>
+
+  <!-- 2-col: FRAM chip closeup + OTA flash output terminal -->
+  <div class="proj-img-row cols-2 rv" style="grid-column:1/-1;margin-top:2px;">
+    <figure class="proj-ph wide">
+      <div class="ph-body">
+        <div class="ph-icon">💾</div>
+        <div class="ph-label">FRAM Non-Volatile Memory</div>
+        <div class="ph-hint">fram_chip.jpg</div>
+      </div>
+      <figcaption class="ph-cap">Fujitsu MB85RS — Infinite Write Cycles</figcaption>
+    </figure>
+    <figure class="proj-ph wide">
+      <div class="ph-body">
+        <div class="ph-icon">📲</div>
+        <div class="ph-label">OTA Flash Terminal</div>
+        <div class="ph-hint">ota_flash_log.png</div>
+      </div>
+      <figcaption class="ph-cap">ESP32 Firmware Update — Over-The-Air, Field-Side</figcaption>
+    </figure>
+  </div>
+
+  <!-- BOTTOM SPAN -->
+  <div class="text-block rv" style="grid-column:1/-1;margin-top:2rem;border-top:var(--border);padding-top:4rem;display:grid;grid-template-columns:1fr 1fr;gap:4rem;">
+    <div>
+      <h3>Live Telemetry &amp; OTA</h3>
+      <p>The ESP32 is not just a Bluetooth receiver; it hosts a lightweight asynchronous web server. When a technician connects to the module's local Wi-Fi, they can open a <strong>WebSocket-based Dashboard</strong> in any browser to monitor live CAN bus traffic and physical I/O states in real-time—no proprietary diagnostic tools required.</p>
+      <p>Configuration files can be pushed over Bluetooth or USB, and core firmware updates to the ESP32 are handled via <strong>Over-The-Air (OTA) flashing</strong>, allowing field updates without pulling the unit out from under the dashboard.</p>
+    </div>
+    
+    <!-- CAN Bus Vis Panel -->
+    <div class="data-panel" style="height:100%;">
+      <div class="dp-head">
+        <span>WebSocket Stream</span>
+        <span style="color:var(--ink-dim);">CAN0 RX_TICK</span>
+      </div>
+      <div class="vis-can">
+        <div class="can-feed">
+          <div class="can-msg"><span class="c-time">+1.01s</span><span class="c-id">0x1F8</span><span class="c-dlc">DLC:8</span><span class="c-data">00 4B <span class="hl">FF</span> 00 12 00 00 A1</span></div>
+          <div class="can-msg"><span class="c-time">+1.02s</span><span class="c-id">0x2A1</span><span class="c-dlc">DLC:4</span><span class="c-data">C2 <span class="hl">01</span> 00 00</span></div>
+          <div class="can-msg"><span class="c-time">+1.05s</span><span class="c-id">0x400</span><span class="c-dlc">DLC:8</span><span class="c-data">10 00 00 00 00 00 00 <span class="hl">EE</span></span></div>
+          <div class="can-msg"><span class="c-time">+1.08s</span><span class="c-id">0x1F8</span><span class="c-dlc">DLC:8</span><span class="c-data">00 4B <span class="hl">FE</span> 00 12 00 00 A1</span></div>
+          <div class="can-msg"><span class="c-time">+1.11s</span><span class="c-id">0x3B2</span><span class="c-dlc">DLC:2</span><span class="c-data">0A 0B</span></div>
+          <div class="can-msg"><span class="c-time">+1.15s</span><span class="c-id">0x2A1</span><span class="c-dlc">DLC:4</span><span class="c-data">C2 <span class="hl">01</span> 00 00</span></div>
+          <!-- Duplicated for visual density -->
+          <div class="can-msg"><span class="c-time">+1.01s</span><span class="c-id">0x1F8</span><span class="c-dlc">DLC:8</span><span class="c-data">00 4B <span class="hl">FF</span> 00 12 00 00 A1</span></div>
+          <div class="can-msg"><span class="c-time">+1.02s</span><span class="c-id">0x2A1</span><span class="c-dlc">DLC:4</span><span class="c-data">C2 <span class="hl">01</span> 00 00</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Cross-link navigation -->
+<div class="cross-links">
+  <a href="project-vacuum.html" class="cross-link-card">
+    <div>
+      <div class="clc-label">Previous</div>
+      <div class="clc-title">Vacuum Diagnostic</div>
+    </div>
+    <div class="clc-arrow left">←</div>
+  </a>
+  <a href="project-beam.html" class="cross-link-card" style="text-align:right;flex-direction:row-reverse;">
+    <div>
+      <div class="clc-label">Next</div>
+      <div class="clc-title">Self-Balancing Beam</div>
+    </div>
+    <div class="clc-arrow right">→</div>
+  </a>
+</div>
+
+<footer class="site-footer">
+  <a href="main.html" class="foot-logo">IA<em>.</em></a>
+  <div class="foot-links">
+    <a href="about.html">About</a>
+    <a href="education.html">Education</a>
+    <a href="stack-hardware.html">Stack</a>
+    <a href="main.html#projects">Projects</a>
+    <a href="main.html#contact">Contact</a>
+  </div>
+  <div class="foot-copy">© <span class="yr"></span> ISHTIYAQ AHMAD. ALL RIGHTS RESERVED.</div>
+</footer>
+
+<script src="shared.js"></script>
+</body>
+</html>
