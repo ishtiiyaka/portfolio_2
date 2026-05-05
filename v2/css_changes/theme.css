@@ -1,0 +1,116 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEME.CSS — Design Tokens ▸ OBSIDIAN PULSE Edition
+   ───────────────────────────────────────────────────────────────────────────
+   HOW TO USE:
+   - Change ANY value here and it updates everywhere across all pages.
+   - Do NOT change values in shared.css or page files — change them here.
+   - Each section is clearly labelled. Find what you want, change the value.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+
+  /* ─────────────────────────────────────────────────────
+     COLOUR PALETTE — Deep Space Dark
+     ─────────────────────────────────────────────────────
+     Base: deep obsidian navy-black
+     Primary accent: hot magenta / electric pink
+     Secondary accent: electric teal / cyan-green
+     Text: cool lavender-white
+  ───────────────────────────────────────────────────── */
+
+  /* Main backgrounds */
+  --bg:          #07080f;   /* Deep space — near-black with blue undertone */
+  --bg-alt:      #0d0e1a;   /* Subtle panel lift */
+  --bg-dark:     #040408;   /* Darkest — void black */
+  --bg-dark-alt: #0a0b14;   /* Dark section background */
+
+  /* Text colours */
+  --ink:         #eeeaff;   /* Primary — cool lavender-white */
+  --ink-dim:     rgba(238, 234, 255, 0.45); /* Secondary / muted */
+  --ink-light:   #eeeaff;   /* Text on dark backgrounds (same as --ink now) */
+  --ink-faint:   rgba(238, 234, 255, 0.2);  /* Very muted on dark */
+
+  /* Accent — change these to rebrand the entire site */
+  --accent:      #e8439d;   /* Primary — hot magenta */
+  --accent-2:    #00d4aa;   /* Secondary — electric teal */
+  --accent-blue: #4f46e5;   /* Tertiary — deep indigo */
+
+  /* Borders & dividers */
+  --rule:        rgba(238, 234, 255, 0.08); /* Subtle rule on dark bg */
+  --rule-dark:   rgba(238, 234, 255, 0.05); /* Even subtler rule in dark sections */
+
+  /* Status colours */
+  --green:       #00ff87;   /* Neon green — online / success */
+  --white:       #ffffff;
+
+
+  /* ─────────────────────────────────────────────────────
+     TYPOGRAPHY
+     ─────────────────────────────────────────────────────
+     Fonts are loaded via Google Fonts in shared.css.
+     Update the @import URL in shared.css if you change fonts here.
+  ───────────────────────────────────────────────────── */
+
+  /* Font families */
+  --font-display: 'Big Shoulders Display', sans-serif; /* Ultra-condensed dramatic headlines */
+  --font-body:    'Karla', sans-serif;                 /* Clean humanist sans for body */
+  --font-label:   'Share Tech Mono', monospace;        /* Technical mono for labels/tags */
+
+  /* Font sizes — fluid scale */
+  --text-hero:   clamp(5rem, 9.5vw, 11rem);  /* Hero name */
+  --text-h1:     clamp(4.5rem, 8.5vw, 10rem);/* Page titles */
+  --text-h2:     clamp(2.2rem, 4vw, 3.8rem); /* Section titles */
+  --text-h3:     clamp(1.5rem, 2.2vw, 2rem); /* Card titles */
+  --text-body:   0.94rem;                     /* Body paragraphs */
+  --text-small:  0.82rem;                     /* Labels, tags, captions */
+  --text-xsmall: 0.7rem;                      /* Footer, metadata */
+  --text-micro:  0.64rem;                     /* Status pills, timestamps */
+
+
+  /* ─────────────────────────────────────────────────────
+     SPACING
+  ───────────────────────────────────────────────────── */
+
+  --space-xs:  0.5rem;
+  --space-sm:  1rem;
+  --space-md:  2rem;
+  --space-lg:  4rem;
+  --space-xl:  6rem;
+  --space-xxl: 9rem;
+
+  --section-pad:    7rem 5rem;
+  --section-pad-sm: 5rem 2rem;
+  --page-header-pad: 9rem 5rem 5rem;
+
+
+  /* ─────────────────────────────────────────────────────
+     BORDERS & RADII
+     ─────────────────────────────────────────────────────
+     6px — subtle rounding for a premium modern feel.
+     Use 0px for a harder brutalist edge if preferred.
+  ───────────────────────────────────────────────────── */
+
+  --radius:    6px;
+  --radius-sm: 4px;
+  --border:       1px solid var(--rule);
+  --border-dark:  1px solid var(--rule-dark);
+
+
+  /* ─────────────────────────────────────────────────────
+     ANIMATION SPEEDS
+  ───────────────────────────────────────────────────── */
+
+  --transition:      0.3s;
+  --transition-slow: 0.55s cubic-bezier(.16, 1, .3, 1);
+  --transition-fast: 0.15s;
+
+
+  /* ─────────────────────────────────────────────────────
+     LAYOUT
+  ───────────────────────────────────────────────────── */
+
+  --sidebar-width: 80px;
+  --nav-height:    64px;
+  --max-content:   1400px;
+
+}

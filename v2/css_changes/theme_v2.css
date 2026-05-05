@@ -1,0 +1,116 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEME.CSS — Design Tokens for Ishtiyaq Ahmad Portfolio
+   ───────────────────────────────────────────────────────────────────────────
+   THEME: Biological / Organic Dark
+   Palette: Deep black + bioluminescent teal (#00ffcc) + amber (#ffaa44)
+   Aesthetic: Living tissue, deep-sea creatures, neural pathways, grown not designed.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+
+  /* ─────────────────────────────────────────────────────
+     COLOUR PALETTE — Bioluminescent Dark
+     ─────────────────────────────────────────────────────
+     Black background with elements that glow like deep-sea life.
+     --accent is the primary bioluminescent signal colour.
+  ───────────────────────────────────────────────────── */
+
+  /* Main backgrounds — deep biological black */
+  --bg:          #050604;   /* Page background — near-black with faint green undertone */
+  --bg-alt:      #090d0b;   /* Hover / alternate panel — slightly lighter */
+  --bg-dark:     #030402;   /* Deepest black for sections */
+  --bg-dark-alt: #070a08;   /* Footer, photo bg */
+
+  /* Text colours — pale bioluminescent whites */
+  --ink:         #d4f0ea;   /* Primary text — pale teal-white */
+  --ink-dim:     #5a9e92;   /* Secondary / muted — desaturated teal */
+  --ink-light:   #d4f0ea;   /* Same as ink (everything is on dark) */
+  --ink-faint:   rgba(0,255,204,0.18); /* Very muted text — faint bioluminescence */
+
+  /* Accent — bioluminescent signals */
+  --accent:      #00ffcc;   /* Primary — bioluminescent blue-green */
+  --accent-2:    #ffaa44;   /* Secondary — amber, like light through skin */
+  --accent-blue: #00c8ff;   /* Tertiary — deep-water bioluminescent blue */
+
+  /* Borders & dividers — barely visible neural threads */
+  --rule:        rgba(0,255,204,0.08);  /* Faint teal rule */
+  --rule-dark:   rgba(0,255,204,0.05); /* Even fainter on dark panels */
+
+  /* Status colours */
+  --green:       #00ffcc;   /* Online — matches accent */
+  --white:       #d4f0ea;   /* Off-white with teal cast */
+
+
+  /* ─────────────────────────────────────────────────────
+     TYPOGRAPHY
+     ─────────────────────────────────────────────────────
+     Ultra-thin serif (Cormorant Garamond) + hand-drawn (Caveat)
+     Make sure the Google Fonts URL in shared.css stays in sync.
+  ───────────────────────────────────────────────────── */
+
+  /* Font families */
+  --font-display: 'Cormorant Garamond', Georgia, serif;  /* Headlines — ultra-thin, organic */
+  --font-body:    'DM Mono', 'Courier New', monospace;   /* Body — keeps the technical edge */
+  --font-label:   'Caveat', cursive;                      /* Labels — hand-drawn, alive */
+
+  /* Font sizes — fluid scale */
+  --text-hero:   clamp(4.5rem, 8vw, 9rem);
+  --text-h1:     clamp(4rem, 7vw, 8rem);
+  --text-h2:     clamp(2rem, 3.5vw, 3.2rem);
+  --text-h3:     clamp(1.4rem, 2vw, 1.8rem);
+  --text-body:   0.78rem;
+  --text-small:  0.72rem;
+  --text-xsmall: 0.62rem;
+  --text-micro:  0.58rem;
+
+
+  /* ─────────────────────────────────────────────────────
+     SPACING — unchanged, the skeleton stays the same
+  ───────────────────────────────────────────────────── */
+
+  --space-xs:  0.5rem;
+  --space-sm:  1rem;
+  --space-md:  2rem;
+  --space-lg:  4rem;
+  --space-xl:  6rem;
+  --space-xxl: 9rem;
+
+  --section-pad:    7rem 5rem;
+  --section-pad-sm: 5rem 2rem;
+  --page-header-pad: 9rem 5rem 5rem;
+
+
+  /* ─────────────────────────────────────────────────────
+     BORDERS & RADII
+     ─────────────────────────────────────────────────────
+     Still sharp — organic is about texture and glow, not rounding.
+  ───────────────────────────────────────────────────── */
+
+  --radius:       0px;
+  --radius-sm:    0px;
+  --border:       1px solid var(--rule);
+  --border-dark:  1px solid var(--rule-dark);
+
+
+  /* ─────────────────────────────────────────────────────
+     ANIMATION SPEEDS
+  ───────────────────────────────────────────────────── */
+
+  --transition:      0.3s;
+  --transition-slow: 0.5s cubic-bezier(.16,1,.3,1);
+  --transition-fast: 0.15s;
+
+  /* Biological pulse rhythm — used in breathing animations */
+  --breathe-speed:   3.5s;
+  --pulse-speed:     2.2s;
+
+
+  /* ─────────────────────────────────────────────────────
+     LAYOUT
+  ───────────────────────────────────────────────────── */
+
+  --sidebar-width: 80px;
+  --nav-height:    64px;
+  --max-content:   1400px;
+
+}
