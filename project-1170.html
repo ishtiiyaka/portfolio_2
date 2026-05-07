@@ -3,257 +3,475 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Project 05: Data Pipelines — Ishtiyaq Ahmad</title>
+<title>Project 1170 — Personal OS — Ishtiyaq Ahmad</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@100;400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100;0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,700&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 <style>
 /* ==========================================================================
-   🎨 THEME: DEEP DATA / CYBERNETIC (Dark Void, Neon Cyan, Hot Magenta)
+   🎨 THEME: BRUTALIST MONOCHROME — stark black / white / blood red
+   Zero distractions. A system that demands accountability.
    ========================================================================== */
 :root {
-  --bg: #04030a;
-  --panel: #0a0816;
-  --fg: #e2e2ee;
-  --cyan: #00f0ff;
-  --magenta: #ff007f;
-  --violet: #7a00ff;
-  --dim: #4b4b66;
-  --border: rgba(0, 240, 255, 0.15);
-  --font-display: 'Orbitron', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --bg:       #060606;
+  --surface:  #0c0c0c;
+  --surface2: #111111;
+  --fg:       #f0f0f0;
+  --fg-dim:   rgba(240,240,240,0.4);
+  --red:      #dc2626;
+  --red2:     #ef4444;
+  --red-dim:  rgba(220,38,38,0.15);
+  --white:    #ffffff;
+  --border:   rgba(240,240,240,0.08);
+  --border2:  rgba(220,38,38,0.25);
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--fg);font-family:'DM Mono',monospace;overflow-x:hidden;cursor:none;}
 
-body {
-  background: var(--bg); color: var(--fg);
-  font-family: var(--font-mono); overflow-x: hidden; cursor: none;
-}
-
-/* ─── CYBER GRID BACKGROUND ─── */
-.cyber-grid {
-  position: fixed; inset: 0; z-index: -1;
-  background-image: 
-    linear-gradient(rgba(122, 0, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(122, 0, 255, 0.05) 1px, transparent 1px);
-  background-size: 40px 40px;
-  transform: perspective(500px) rotateX(60deg) translateY(-100px) scale(3);
-  transform-origin: top center;
-  animation: gridMove 10s linear infinite;
-  mask-image: linear-gradient(to bottom, transparent 20%, black 100%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 20%, black 100%);
-}
-@keyframes gridMove {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 40px; }
+/* ─── NOISE GRAIN ─── */
+body::before{
+  content:'';position:fixed;inset:0;z-index:9000;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:.03;
 }
 
 /* ─── CUSTOM CURSOR ─── */
-#cur {
-  position: fixed; z-index: 9999; pointer-events: none;
-  width: 4px; height: 4px; background: var(--cyan);
-  border-radius: 50%; transform: translate(-50%, -50%);
-  box-shadow: 0 0 10px var(--cyan), 0 0 20px var(--cyan);
-  transition: width 0.2s, height 0.2s;
+#cur{
+  position:fixed;z-index:9999;pointer-events:none;
+  width:10px;height:10px;background:var(--red);
+  border-radius:50%;transform:translate(-50%,-50%);
+  transition:width .2s,height .2s,background .2s;
 }
-#cur::before {
-  content:''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
-  border: 1px solid rgba(0, 240, 255, 0.5); border-radius: 50%;
-  animation: spin 4s linear infinite;
+#cur-ring{
+  position:fixed;z-index:9998;pointer-events:none;
+  width:38px;height:38px;border:1px solid rgba(220,38,38,.5);
+  border-radius:50%;transform:translate(-50%,-50%);
+  transition:all .45s cubic-bezier(.16,1,.3,1);
 }
-@keyframes spin { 100% { transform: rotate(360deg); } }
-body.hovering #cur { width: 12px; height: 12px; background: var(--magenta); box-shadow: 0 0 15px var(--magenta); }
-body.hovering #cur::before { border-color: var(--magenta); }
+body.hov #cur{width:22px;height:22px;background:var(--fg);}
+body.hov #cur-ring{width:55px;height:55px;border-color:rgba(240,240,240,.3);}
 
 /* ─── NAVIGATION ─── */
-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center;
-  background: linear-gradient(to bottom, var(--bg), transparent);
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:1.6rem 4rem;display:flex;justify-content:space-between;align-items:center;
+  background:rgba(6,6,6,.95);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border2);
 }
-.back-link {
-  font-family: var(--font-display); font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--cyan); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;
-  text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+.back-link{
+  font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--fg-dim);text-decoration:none;display:flex;align-items:center;gap:.8rem;
+  transition:color .25s,transform .3s;
 }
-.back-link:hover { color: var(--magenta); text-shadow: 0 0 10px rgba(255, 0, 127, 0.5); }
-.sys-status {
-  font-size: 0.6rem; letter-spacing: 0.3em; color: var(--magenta); text-transform: uppercase;
-  display: flex; align-items: center; gap: 0.5rem;
+.back-link:hover{color:var(--fg);transform:translateX(-5px);}
+.back-link::before{content:'';width:22px;height:1px;background:currentColor;transition:width .3s;}
+.back-link:hover::before{width:34px;}
+.sys-badge{
+  font-size:.55rem;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--red);display:flex;align-items:center;gap:.5rem;
 }
-.sys-status::before { content: '■'; animation: blink 1s step-end infinite; }
-@keyframes blink { 50% { opacity: 0; } }
+.sys-badge::before{content:'';width:6px;height:6px;background:var(--red);border-radius:50%;animation:blink 0.8s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
-/* ─── LAYOUT ─── */
-.header-hero { padding: 10rem 4rem 4rem; max-width: 1400px; margin: 0 auto; position: relative; }
-.h-meta { font-family: var(--font-display); font-size: 0.7rem; letter-spacing: 0.4em; color: var(--violet); text-transform: uppercase; margin-bottom: 2rem; display: flex; gap: 2rem;}
-.h-title { 
-  font-family: var(--font-display); font-size: clamp(3rem, 5.5vw, 5.5rem); 
-  font-weight: 900; line-height: 1.1; color: var(--fg); margin-bottom: 1.5rem;
-  text-shadow: 0 0 30px rgba(122, 0, 255, 0.3);
+/* ─── HEADER ─── */
+.header-hero{
+  padding:11rem 4rem 5rem;max-width:1400px;margin:0 auto;
+  border-bottom:1px solid var(--border);position:relative;
 }
-.h-title span { color: var(--cyan); }
-.h-desc { font-size: 0.9rem; line-height: 1.8; color: #a0a0b8; max-width: 750px; }
+.countdown-badge{
+  display:inline-flex;align-items:center;gap:1.2rem;
+  border:1px solid var(--border2);padding:.8rem 1.5rem;
+  margin-bottom:3rem;
+}
+.cd-label{font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:var(--fg-dim);}
+.cd-number{
+  font-family:'Fraunces',serif;font-size:2.5rem;font-weight:900;
+  color:var(--red);letter-spacing:-.04em;line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.cd-unit{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--fg-dim);}
+.h-meta{
+  font-family:'Syne',sans-serif;font-size:.72rem;letter-spacing:.35em;
+  color:var(--fg-dim);text-transform:uppercase;margin-bottom:1.5rem;
+  display:flex;gap:2.5rem;
+}
+.h-title{
+  font-family:'Fraunces',serif;font-size:clamp(3rem,6vw,6.5rem);
+  font-weight:900;line-height:.9;letter-spacing:-.04em;margin-bottom:2.5rem;
+  color:var(--fg);
+}
+.h-title em{font-style:italic;color:var(--red);}
+.h-desc{font-size:.92rem;line-height:1.85;color:var(--fg-dim);max-width:800px;}
+.h-tags{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:2rem;}
+.h-tag{font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;border:1px solid var(--border);color:var(--fg-dim);padding:.25rem .7rem;}
+.h-tag.red{border-color:var(--border2);color:var(--red);}
 
-.content-grid {
-  display: grid; grid-template-columns: 1fr 1fr;
-  max-width: 1400px; margin: 0 auto; padding: 4rem; gap: 4rem;
+/* ─── CONTENT GRID ─── */
+.content-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  max-width:1400px;margin:0 auto;padding:4rem;gap:4rem;
 }
 
 /* ─── TEXT BLOCKS ─── */
-.text-block h3 { font-family: var(--font-display); font-size: 1.2rem; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.5rem; text-shadow: 0 0 10px rgba(0, 240, 255, 0.3); }
-.text-block p { font-size: 0.85rem; line-height: 2.1; color: #a0a0b8; margin-bottom: 1.5rem; }
-.text-block strong { color: var(--fg); }
-
-/* ─── GLOWING DATA PANELS ─── */
-.data-panel {
-  background: var(--panel); border: 1px solid var(--border); border-radius: 4px;
-  box-shadow: 0 0 20px rgba(0, 240, 255, 0.05), inset 0 0 20px rgba(122, 0, 255, 0.05);
-  display: flex; flex-direction: column; overflow: hidden; position: relative;
+.text-block h3{
+  font-family:'Syne',sans-serif;font-size:1.1rem;color:var(--fg);
+  text-transform:uppercase;letter-spacing:.1em;margin-bottom:1.5rem;
+  padding-bottom:.75rem;border-bottom:1px solid var(--border2);
 }
-.dp-head {
-  background: rgba(0, 240, 255, 0.05); padding: 0.75rem 1rem; font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--cyan); display: flex; justify-content: space-between; border-bottom: 1px solid var(--border);
+.text-block p{font-size:.85rem;line-height:2.1;color:var(--fg-dim);margin-bottom:1.5rem;}
+.text-block strong{color:var(--fg);font-weight:500;}
+.text-block ul{list-style:none;margin-bottom:1.5rem;}
+.text-block ul li{
+  font-size:.82rem;line-height:1.9;color:var(--fg-dim);padding:.5rem 0;
+  border-bottom:1px solid var(--border);display:flex;gap:.75rem;
+}
+.text-block ul li::before{content:'→';color:var(--red);flex-shrink:0;}
+.text-block ul li strong{color:var(--fg);}
+
+/* ─── PANELS ─── */
+.panel{
+  background:var(--surface);border:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.panel.red-border{border-color:var(--border2);}
+.panel-head{
+  background:var(--surface2);padding:.8rem 1.2rem;
+  font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--fg-dim);display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid var(--border);
+}
+.panel-head .ph-red{color:var(--red);}
+
+/* ─── COUNTDOWN DISPLAY ─── */
+.vis-countdown{
+  padding:3rem 2rem;display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+  background:var(--border);
+}
+.cd-cell{background:var(--surface);padding:2rem 1rem;text-align:center;}
+.cd-cell-n{
+  font-family:'Fraunces',serif;font-size:clamp(2rem,4vw,3.5rem);
+  font-weight:900;color:var(--fg);letter-spacing:-.04em;line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.cd-cell-n.red{color:var(--red);}
+.cd-cell-l{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--fg-dim);margin-top:.5rem;}
+
+/* ─── PLATFORM GRID ─── */
+.vis-platforms{padding:1.5rem;display:flex;flex-direction:column;gap:1rem;}
+.platform-row{
+  display:flex;align-items:center;gap:1.2rem;
+  padding:1rem 1.2rem;border:1px solid var(--border);
+  transition:border-color .3s,background .3s;
+}
+.platform-row:hover{border-color:var(--border2);background:var(--red-dim);}
+.plt-icon{font-size:1.2rem;width:28px;text-align:center;flex-shrink:0;}
+.plt-name{font-family:'Syne',sans-serif;font-size:.8rem;font-weight:700;color:var(--fg);}
+.plt-desc{font-size:.6rem;color:var(--fg-dim);margin-top:.2rem;}
+.plt-status{margin-left:auto;font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--red);}
+
+/* ─── INTERFACE PREVIEW ─── */
+.vis-interface{
+  padding:1.5rem;min-height:280px;
+  background:var(--surface2);position:relative;overflow:hidden;
+  display:flex;flex-direction:column;gap:1.2rem;
+}
+.ui-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border2);padding-bottom:.8rem;
+}
+.ui-title{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:900;letter-spacing:-.03em;color:var(--fg);}
+.ui-clock{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--fg-dim);}
+.ui-main-num{
+  font-family:'Fraunces',serif;font-size:clamp(4rem,8vw,7rem);
+  font-weight:900;letter-spacing:-.05em;color:var(--red);
+  line-height:.9;font-variant-numeric:tabular-nums;
+}
+.ui-main-label{font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;color:var(--fg-dim);margin-top:.5rem;}
+.ui-progress{height:2px;background:var(--border);margin-top:1.5rem;}
+.ui-progress-fill{height:100%;background:var(--red);width:0%;transition:width 2s ease;}
+.ui-goal-row{display:flex;justify-content:space-between;font-size:.62rem;color:var(--fg-dim);margin-top:.5rem;}
+.ui-goal-row .done{color:var(--fg);}
+
+/* ─── SPECS GRID ─── */
+.specs-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:1px;
+  background:var(--border);border-top:1px solid var(--border);
+}
+.spec-box{background:var(--surface2);padding:1.2rem 1rem;}
+.sb-label{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--fg-dim);margin-bottom:.5rem;}
+.sb-value{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;color:var(--fg);line-height:1.3;}
+
+/* ─── PHILOSOPHY BLOCK ─── */
+.philosophy{
+  grid-column:1/-1;margin-top:2rem;
+  border:1px solid var(--border2);padding:4rem;
+  background:var(--red-dim);position:relative;
+}
+.philosophy::before{
+  content:'"';position:absolute;top:1rem;left:2rem;
+  font-family:'Fraunces',serif;font-size:8rem;font-weight:900;
+  color:rgba(220,38,38,.15);line-height:1;user-select:none;
+}
+.philosophy blockquote{
+  font-family:'Fraunces',serif;font-size:clamp(1.4rem,2.5vw,2rem);
+  font-weight:700;font-style:italic;color:var(--fg);line-height:1.4;
+  letter-spacing:-.02em;position:relative;z-index:1;
+}
+.philosophy cite{
+  display:block;font-family:'DM Mono',monospace;font-size:.62rem;
+  font-style:normal;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--red);margin-top:1.5rem;
 }
 
-/* Vis 1: Thread Pool / Async Workers */
-.vis-threads { padding: 2rem; display: flex; flex-direction: column; gap: 1rem; height: 220px; justify-content: center;}
-.thread { display: flex; align-items: center; gap: 1rem; }
-.th-id { font-size: 0.6rem; color: var(--dim); width: 60px; text-align: right; }
-.th-bar-bg { flex: 1; height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; position: relative; overflow: hidden; }
-.th-bar-fill { height: 100%; background: var(--cyan); border-radius: 2px; position: absolute; left: 0; top: 0; box-shadow: 0 0 10px var(--cyan); }
-.th-bar-fill.t1 { animation: load 1.5s ease-in-out infinite alternate; }
-.th-bar-fill.t2 { animation: load 2.1s ease-in-out infinite alternate-reverse; background: var(--magenta); box-shadow: 0 0 10px var(--magenta);}
-.th-bar-fill.t3 { animation: load 1.2s ease-in-out infinite alternate; background: var(--violet); box-shadow: 0 0 10px var(--violet);}
-.th-bar-fill.t4 { animation: load 2.5s ease-in-out infinite alternate-reverse; }
-
-@keyframes load { 0% { width: 10%; } 100% { width: 95%; } }
-
-/* Vis 2: JSON Payload Stream */
-.vis-json { padding: 1.5rem; font-size: 0.7rem; line-height: 1.6; color: var(--dim); height: 250px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;}
-.json-stream { display: flex; flex-direction: column; gap: 0.5rem; animation: scrollUp 4s linear infinite; }
-.j-key { color: var(--cyan); }
-.j-str { color: var(--magenta); }
-.j-num { color: #facc15; }
-.j-block { background: rgba(0,0,0,0.4); padding: 0.5rem; border-left: 2px solid var(--violet); }
-
-@keyframes scrollUp { 0% { transform: translateY(50px); opacity: 0.8;} 100% { transform: translateY(-20px); opacity: 1;} }
-
-/* Specs Grid */
-.specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border-top: 1px solid var(--border); }
-.spec-box { background: var(--panel); padding: 1.2rem 1rem; }
-.sb-label { font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); margin-bottom: 0.5rem; }
-.sb-value { font-family: var(--font-display); font-size: 0.85rem; color: var(--fg); }
-
-@media (max-width: 960px) {
-  .content-grid { grid-template-columns: 1fr; padding: 2rem; gap: 4rem; }
-  .h-title { font-size: 2.5rem; }
+/* ─── RESPONSIVE ─── */
+@media(max-width:960px){
+  .content-grid{grid-template-columns:1fr;padding:2rem;}
+  .header-hero{padding:8rem 2rem 3rem;}
+  nav{padding:1.2rem 2rem;}
+  .vis-countdown{grid-template-columns:repeat(2,1fr);}
+  .philosophy{padding:2.5rem 1.5rem;}
 }
 
-.reveal { opacity: 0; transform: translateY(30px); }
+.reveal{opacity:0;transform:translateY(35px);}
 </style>
 </head>
 <body>
 
 <div id="cur"></div>
-<div class="cyber-grid"></div>
+<div id="cur-ring"></div>
 
 <nav>
-  <a href="main.html" class="back-link">Terminate_Session()</a>
-  <div class="sys-status">SCRAPER_NODE_ACTIVE</div>
+  <a href="main.html" class="back-link">Return to Main OS</a>
+  <div class="sys-badge">SYSTEM: RUNNING</div>
 </nav>
 
 <header class="header-hero reveal">
-  <div class="h-meta"><span>PRJ_05</span><span>Data Engineering</span></div>
-  <h1 class="h-title">Automated Media &<br><span>Data Pipelines</span></h1>
-  <p class="h-desc">High-concurrency Python scraping architectures designed to bypass anti-bot protections, extract locked datasets, and automate large-scale media acquisition via headless browser orchestration.</p>
-</header>
-
-<main class="content-grid">
-  
-  <div class="text-block reveal">
-    <h3>Headless Orchestration</h3>
-    <p>Manual data collection is a failure of engineering. I design autonomous Python pipelines utilizing <strong>Selenium WebDriver</strong> and <strong>BeautifulSoup4</strong> to interact with the web exactly as a human would, but at machine speed.</p>
-    <p>This goes beyond simple `requests.get()`. Modern web applications employ aggressive dynamic DOM rendering and anti-bot captchas. My scrapers utilize headless Chrome instances, spoofed user-agents, proxy rotation, and injected JavaScript to defeat canvas fingerprinting and solve captchas automatically, maintaining persistent sessions to scrape data sitting behind authenticated paywalls.</p>
-    
-    <h3 style="margin-top: 3rem;">Concurrent Pipeline Architecture</h3>
-    <p>When downloading gigabytes of proprietary media or traversing 100,000+ product pages, a synchronous script will take days. I implemented <strong>Asyncio and ThreadPoolExecutors</strong> to parallelize network I/O operations.</p>
-    <p>By dispatching hundreds of asynchronous worker nodes simultaneously, the system saturates the network bandwidth, reducing a 48-hour sequential extraction task down to a 3-hour parallel payload drop.</p>
+  <!-- Live countdown badge -->
+  <div class="countdown-badge">
+    <div>
+      <div class="cd-label">Time Remaining</div>
+    </div>
+    <div class="cd-number" id="hdr-days">---</div>
+    <div class="cd-unit">Days</div>
   </div>
 
-  <div class="reveal" style="display:flex; flex-direction:column; gap:3rem;">
-    
-    <!-- Vis 1: Thread Pool -->
-    <div class="data-panel">
-      <div class="dp-head"><span>Asyncio Worker Pool</span><span>I/O LOAD</span></div>
-      <div class="vis-threads">
-        <div class="thread"><div class="th-id">WORKER_01</div><div class="th-bar-bg"><div class="th-bar-fill t1"></div></div></div>
-        <div class="thread"><div class="th-id">WORKER_02</div><div class="th-bar-bg"><div class="th-bar-fill t2"></div></div></div>
-        <div class="thread"><div class="th-id">WORKER_03</div><div class="th-bar-bg"><div class="th-bar-fill t3"></div></div></div>
-        <div class="thread"><div class="th-id">WORKER_04</div><div class="th-bar-bg"><div class="th-bar-fill t4"></div></div></div>
-        <div class="thread"><div class="th-id">WORKER_05</div><div class="th-bar-bg"><div class="th-bar-fill t1" style="animation-delay:-0.5s"></div></div></div>
+  <div class="h-meta"><span>PRJ_03</span><span>Cross-Platform Productivity System</span></div>
+  <h1 class="h-title">Project <em>1170</em><br>Personal OS</h1>
+  <p class="h-desc">A bespoke, zero-distraction personal operating system anchored by a strict 1095-day countdown — roughly 3 years — to a singular high-stakes personal deadline. Custom-built across Desktop, Web, and Android with a brutalist UI philosophy: no colours, no comfort, only accountability.</p>
+  <div class="h-tags">
+    <span class="h-tag red">Desktop App</span>
+    <span class="h-tag red">Web</span>
+    <span class="h-tag red">Android</span>
+    <span class="h-tag">Brutalist UI</span>
+    <span class="h-tag">Countdown Logic</span>
+    <span class="h-tag">Goal Tracking</span>
+    <span class="h-tag">Python / JS / Kotlin</span>
+  </div>
+</header>
+
+<main>
+<div class="content-grid">
+
+  <!-- LEFT: TEXT -->
+  <div class="text-block reveal">
+    <h3>The Philosophy</h3>
+    <p>Productivity systems fail because they are designed to be comfortable. Todo apps have friendly colours, motivational quotes, and satisfying animations. They gamify the experience — which is precisely why they don't work for high-stakes, multi-year goals.</p>
+    <p>Project 1170 is built on a single, brutal truth: <strong>every day that passes is a day permanently subtracted</strong>. The interface does not celebrate you. It does not give you points. It counts down, relentlessly, in monochrome.</p>
+
+    <h3 style="margin-top:3rem;">Architecture: Three Platforms, One Data Core</h3>
+    <ul>
+      <li><strong>Desktop (Python/PyQt6):</strong> The primary environment. A full-screen lock-mode application that launches at system startup, blocking distraction before the workspace is unlocked.</li>
+      <li><strong>Web (Vanilla JS):</strong> A zero-dependency, statically hosted dashboard for cross-device access. No frameworks — brutally minimal load time.</li>
+      <li><strong>Android (Kotlin):</strong> Home screen widget displaying only the day count and current primary objective. No app — just a widget. Maximum presence, minimum friction.</li>
+    </ul>
+  </div>
+
+  <!-- RIGHT: PANELS -->
+  <div class="reveal" style="display:flex;flex-direction:column;gap:2.5rem;">
+
+    <!-- Live Countdown -->
+    <div class="panel red-border">
+      <div class="panel-head">
+        <span>1170 Countdown Clock</span>
+        <span class="ph-red">● LIVE</span>
+      </div>
+      <div class="vis-countdown">
+        <div class="cd-cell">
+          <div class="cd-cell-n red" id="cd-days">---</div>
+          <div class="cd-cell-l">Days</div>
+        </div>
+        <div class="cd-cell">
+          <div class="cd-cell-n" id="cd-hours">--</div>
+          <div class="cd-cell-l">Hours</div>
+        </div>
+        <div class="cd-cell">
+          <div class="cd-cell-n" id="cd-mins">--</div>
+          <div class="cd-cell-l">Minutes</div>
+        </div>
+        <div class="cd-cell">
+          <div class="cd-cell-n" id="cd-secs">--</div>
+          <div class="cd-cell-l">Seconds</div>
+        </div>
       </div>
       <div class="specs-grid">
-        <div class="spec-box"><div class="sb-label">Concurrency Model</div><div class="sb-value">ThreadPoolExecutor</div></div>
-        <div class="spec-box"><div class="sb-label">Bandwidth Saturation</div><div class="sb-value">94.2%</div></div>
+        <div class="spec-box"><div class="sb-label">Total Duration</div><div class="sb-value">1170 Days / ~3 Years</div></div>
+        <div class="spec-box"><div class="sb-label">Platforms</div><div class="sb-value">Desktop · Web · Android</div></div>
       </div>
     </div>
 
-    <!-- Vis 2: JSON Stream -->
-    <div class="data-panel">
-      <div class="dp-head"><span>Payload Extractor</span><span>DOM -> JSON</span></div>
-      <div class="vis-json">
-        <div class="json-stream">
-          <div class="j-block">
-            {<br>
-            &nbsp;&nbsp;<span class="j-key">"node_id"</span>: <span class="j-str">"ax_8819"</span>,<br>
-            &nbsp;&nbsp;<span class="j-key">"payload_url"</span>: <span class="j-str">"https://blob..."</span>,<br>
-            &nbsp;&nbsp;<span class="j-key">"size_kb"</span>: <span class="j-num">14205</span><br>
-            }
+    <!-- Platforms -->
+    <div class="panel">
+      <div class="panel-head"><span>Platform Deployment</span><span>Cross-Platform</span></div>
+      <div class="vis-platforms">
+        <div class="platform-row">
+          <div class="plt-icon">🖥️</div>
+          <div>
+            <div class="plt-name">Desktop — Python / PyQt6</div>
+            <div class="plt-desc">Full-screen lock mode, system startup integration, hotkey override</div>
           </div>
-          <div class="j-block">
-            {<br>
-            &nbsp;&nbsp;<span class="j-key">"node_id"</span>: <span class="j-str">"ax_8820"</span>,<br>
-            &nbsp;&nbsp;<span class="j-key">"payload_url"</span>: <span class="j-str">"https://blob..."</span>,<br>
-            &nbsp;&nbsp;<span class="j-key">"size_kb"</span>: <span class="j-num">8902</span><br>
-            }
+          <div class="plt-status">ACTIVE</div>
+        </div>
+        <div class="platform-row">
+          <div class="plt-icon">🌐</div>
+          <div>
+            <div class="plt-name">Web — Vanilla JS</div>
+            <div class="plt-desc">Zero-dependency, statically hosted, sub-200ms load</div>
           </div>
-          <div class="j-block">
-            {<br>
-            &nbsp;&nbsp;<span class="j-key">"node_id"</span>: <span class="j-str">"ax_8821"</span>,<br>
-            &nbsp;&nbsp;<span class="j-key">"payload_url"</span>: <span class="j-str">"https://blob..."</span>,<br>
-            &nbsp;&nbsp;<span class="j-key">"size_kb"</span>: <span class="j-num">31044</span><br>
-            }
+          <div class="plt-status">DEPLOYED</div>
+        </div>
+        <div class="platform-row">
+          <div class="plt-icon">📱</div>
+          <div>
+            <div class="plt-name">Android — Kotlin Widget</div>
+            <div class="plt-desc">Home screen widget only — no full app, maximum presence</div>
           </div>
+          <div class="plt-status">RUNNING</div>
         </div>
       </div>
     </div>
-
   </div>
 
-  <div class="text-block reveal" style="grid-column: 1 / -1; margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 4rem;">
-    <h3>Data Structuring & Cleaning (Pandas)</h3>
-    <p style="max-width: 800px;">Extracting the data is only the first step. Raw scraped DOM elements are messy—filled with whitespace, unicode errors, and missing schema fields. I funnel the raw output into <strong>Pandas DataFrames</strong> to perform vectorized cleaning operations. I normalize text schemas, drop null correlates, and hash the final data blocks before writing to optimized formats like HDF5 or PostgreSQL databases, ensuring the data is immediately ready for downstream analytical models or UI ingestion.</p>
+  <!-- Interface Preview — full width -->
+  <div class="panel reveal" style="grid-column:1/-1;">
+    <div class="panel-head">
+      <span>UI Preview — Desktop Lock Screen</span>
+      <span class="ph-red">BRUTALIST INTERFACE</span>
+    </div>
+    <div class="vis-interface">
+      <div class="ui-topbar">
+        <div class="ui-title">PROJECT 1170</div>
+        <div class="ui-clock" id="ui-time">--:--:--</div>
+      </div>
+      <div>
+        <div class="ui-main-num" id="ui-days">---</div>
+        <div class="ui-main-label">Days Remaining Until Deadline</div>
+      </div>
+      <div>
+        <div class="ui-progress"><div class="ui-progress-fill" id="ui-prog"></div></div>
+        <div class="ui-goal-row">
+          <span>Day 1 — Start</span>
+          <span class="done" id="ui-pct">--% elapsed</span>
+          <span>Day 1170 — End</span>
+        </div>
+      </div>
+      <div style="margin-top:auto;border-top:1px solid var(--border);padding-top:1rem;display:flex;justify-content:space-between;">
+        <div style="font-size:.62rem;color:var(--fg-dim);">PRIMARY OBJECTIVE</div>
+        <div style="font-size:.68rem;color:var(--fg);">UET Mechatronics — Final Year Thesis Complete</div>
+      </div>
+    </div>
+    <div class="specs-grid">
+      <div class="spec-box"><div class="sb-label">Design Language</div><div class="sb-value">Digital Brutalism</div></div>
+      <div class="spec-box"><div class="sb-label">Colour Palette</div><div class="sb-value">Black / White / Red only</div></div>
+      <div class="spec-box"><div class="sb-label">Font Stack</div><div class="sb-value">Fraunces + DM Mono</div></div>
+      <div class="spec-box"><div class="sb-label">Distraction Blocking</div><div class="sb-value">Lock-Mode on Startup</div></div>
+    </div>
   </div>
 
+  <!-- Philosophy quote -->
+  <div class="philosophy reveal">
+    <blockquote>
+      "You do not need motivation. You need a countdown you cannot close."
+      <cite>— Ishtiyaq Ahmad, Project 1170 Design Notes</cite>
+    </blockquote>
+  </div>
+
+  <!-- Bottom text span -->
+  <div class="text-block reveal" style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:3rem;">
+    <h3>Data Persistence & Sync</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;">
+      <p style="margin:0;">All goal data is stored in a local <strong>SQLite database</strong> on the desktop, with a nightly export to a flat JSON file synced via a private GitHub repository. The web and Android versions pull from this JSON endpoint, ensuring all platforms reflect the same state without a cloud dependency or subscription service.</p>
+      <p style="margin:0;">The system enforces a <strong>daily audit</strong>: before the desktop lock-screen can be dismissed, you must log what you completed the previous day. There is no skip button. This creates an unbroken daily accountability record that doubles as a performance journal.</p>
+    </div>
+  </div>
+
+</div><!-- end content-grid -->
 </main>
 
 <script>
+// ─── CURSOR ───────────────────────────────────────
 const cur = document.getElementById('cur');
+const ring = document.getElementById('cur-ring');
+let mx=0, my=0, rx=0, ry=0;
 document.addEventListener('mousemove', e => {
-  cur.style.left = e.clientX + 'px'; cur.style.top = e.clientY + 'px';
+  mx = e.clientX; my = e.clientY;
+  cur.style.left = mx + 'px'; cur.style.top = my + 'px';
 });
-document.querySelectorAll('a, .data-panel').forEach(el => {
-  el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
-  el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+(function loop(){ rx+=(mx-rx)*.1; ry+=(my-ry)*.1; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(loop); })();
+document.querySelectorAll('a, .panel, .platform-row').forEach(el => {
+  el.addEventListener('mouseenter', () => document.body.classList.add('hov'));
+  el.addEventListener('mouseleave', () => document.body.classList.remove('hov'));
 });
 
+// ─── COUNTDOWN LOGIC ──────────────────────────────
+// Target: 1170 days from the project start (set your own start date)
+// Using a fixed deadline 1170 days from 2025-01-01
+const deadline = new Date('2028-04-16T00:00:00');
+const start    = new Date('2025-01-01T00:00:00');
+const total    = deadline - start;
+
+function tick() {
+  const now  = new Date();
+  const diff = deadline - now;
+  if (diff <= 0) return;
+
+  const days  = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const mins  = Math.floor((diff % 3600000)  / 60000);
+  const secs  = Math.floor((diff % 60000)    / 1000);
+  const pct   = Math.min(100, ((now - start) / total * 100)).toFixed(1);
+
+  const fmt = (n, p=2) => String(n).padStart(p,'0');
+
+  // Panel countdown
+  document.getElementById('cd-days').textContent  = fmt(days, 3);
+  document.getElementById('cd-hours').textContent = fmt(hours);
+  document.getElementById('cd-mins').textContent  = fmt(mins);
+  document.getElementById('cd-secs').textContent  = fmt(secs);
+
+  // Header badge
+  const hd = document.getElementById('hdr-days');
+  if(hd) hd.textContent = fmt(days, 3);
+
+  // Interface preview
+  document.getElementById('ui-days').textContent  = fmt(days, 3);
+  document.getElementById('ui-time').textContent  = now.toTimeString().slice(0,8);
+  document.getElementById('ui-pct').textContent   = pct + '% elapsed';
+  const prog = document.getElementById('ui-prog');
+  if(prog) prog.style.width = pct + '%';
+}
+tick();
+setInterval(tick, 1000);
+
+// ─── GSAP ANIMATIONS ──────────────────────────────
 gsap.registerPlugin(ScrollTrigger);
 gsap.utils.toArray('.reveal').forEach(el => {
-  gsap.fromTo(el, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 1, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 85%', once: true } });
+  gsap.fromTo(el, { opacity:0, y:40 }, {
+    opacity:1, y:0, duration:1.1, ease:'power3.out',
+    scrollTrigger:{ trigger:el, start:'top 85%', once:true }
+  });
 });
 </script>
 </body>

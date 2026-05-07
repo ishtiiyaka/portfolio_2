@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 01: Robotic Vacuum Diagnostic System — Ishtiyaq Ahmad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100;0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,700&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<style>
+/* ==========================================================================
+   🎨 THEME: DARK FORENSICS / HARDWARE AUTOPSY
+   Deep charcoal, electric amber, acid green — like a logic analyser
+   ========================================================================== */
+:root {
+  --bg:      #080a07;
+  --panel:   #0d110c;
+  --panel2:  #111510;
+  --fg:      #d4e8c8;
+  --amber:   #f59e0b;
+  --amber2:  #fbbf24;
+  --green:   #22c55e;
+  --green2:  #4ade80;
+  --red:     #ef4444;
+  --dim:     #4a5a40;
+  --dim2:    rgba(212,232,200,0.45);
+  --border:  rgba(245,158,11,0.15);
+  --border2: rgba(34,197,94,0.12);
+  --grid:    rgba(245,158,11,0.04);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--fg);font-family:'DM Mono',monospace;overflow-x:hidden;cursor:none;}
+
+/* ─── CIRCUIT GRID BG ─── */
+.circuit-bg{
+  position:fixed;inset:0;z-index:-1;
+  background-image:
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:45px 45px;
+}
+.circuit-bg::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(245,158,11,.06) 0%,transparent 70%);
+}
+
+/* ─── SCANLINE OVERLAY ─── */
+body::after{
+  content:'';position:fixed;inset:0;z-index:8999;pointer-events:none;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,transparent 2px,
+    rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px
+  );
+}
+
+/* ─── CUSTOM CURSOR ─── */
+#cur{
+  position:fixed;z-index:9999;pointer-events:none;
+  width:3px;height:16px;background:var(--amber);
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 8px var(--amber),0 0 20px rgba(245,158,11,.4);
+  transition:height .2s,background .2s;
+}
+#cur::after{
+  content:'';position:absolute;top:50%;left:50%;
+  width:16px;height:3px;background:var(--amber);
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 8px var(--amber);
+}
+#cur-ring{
+  position:fixed;z-index:9998;pointer-events:none;
+  width:36px;height:36px;
+  border:1px solid rgba(245,158,11,.4);
+  transform:translate(-50%,-50%);
+  transition:all .4s cubic-bezier(.16,1,.3,1);
+}
+body.hov #cur{height:30px;background:var(--green2);}
+body.hov #cur::after{width:30px;background:var(--green2);}
+body.hov #cur-ring{width:55px;height:55px;border-color:rgba(74,222,128,.4);}
+
+/* ─── NAVIGATION ─── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:1.6rem 4rem;display:flex;justify-content:space-between;align-items:center;
+  background:linear-gradient(to bottom,rgba(8,10,7,.95),transparent);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+}
+.back-link{
+  font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--amber);text-decoration:none;display:flex;align-items:center;gap:.8rem;
+  transition:color .25s,transform .3s;
+}
+.back-link:hover{color:var(--fg);transform:translateX(-5px);}
+.back-link::before{content:'';width:22px;height:1px;background:currentColor;transition:width .3s;}
+.back-link:hover::before{width:34px;}
+.sys-badge{
+  font-size:.55rem;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--green2);display:flex;align-items:center;gap:.5rem;
+}
+.sys-badge::before{content:'';width:6px;height:6px;background:var(--green2);border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(74,222,128,.4)}50%{opacity:.6;box-shadow:0 0 0 4px rgba(74,222,128,0)}}
+
+/* ─── HEADER ─── */
+.header-hero{
+  padding:11rem 4rem 5rem;
+  max-width:1400px;margin:0 auto;
+  border-bottom:1px solid var(--border);
+  position:relative;
+}
+.h-meta{
+  font-family:'Syne',sans-serif;font-size:.72rem;letter-spacing:.35em;
+  color:var(--amber);text-transform:uppercase;margin-bottom:2rem;
+  display:flex;gap:2.5rem;align-items:center;
+}
+.h-meta::before{content:'';width:40px;height:1px;background:var(--amber);}
+.h-title{
+  font-family:'Fraunces',serif;font-size:clamp(3rem,5.5vw,5.5rem);
+  font-weight:900;line-height:.95;letter-spacing:-.03em;
+  margin-bottom:2.5rem;color:var(--fg);
+}
+.h-title em{font-style:italic;color:var(--amber);}
+.h-desc{font-size:.92rem;line-height:1.85;color:var(--dim2);max-width:800px;}
+.h-tags{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:2rem;}
+.h-tag{
+  font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;
+  border:1px solid var(--border);color:var(--amber);padding:.25rem .7rem;
+}
+
+/* ─── CONTENT GRID ─── */
+.content-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  max-width:1400px;margin:0 auto;padding:4rem;gap:4rem;
+}
+
+/* ─── TEXT BLOCKS ─── */
+.text-block h3{
+  font-family:'Syne',sans-serif;font-size:1.1rem;color:var(--amber);
+  text-transform:uppercase;letter-spacing:.1em;margin-bottom:1.5rem;
+  display:flex;align-items:center;gap:.75rem;
+}
+.text-block h3::before{content:'▶';font-size:.5em;color:var(--green2);}
+.text-block p{font-size:.85rem;line-height:2.1;color:var(--dim2);margin-bottom:1.5rem;}
+.text-block strong{color:var(--fg);font-weight:500;}
+.text-block ul{list-style:none;margin-bottom:1.5rem;}
+.text-block ul li{
+  font-size:.82rem;line-height:1.9;color:var(--dim2);padding:.4rem 0;
+  border-bottom:1px dashed rgba(245,158,11,.1);display:flex;gap:.75rem;
+}
+.text-block ul li::before{content:'//';color:var(--amber);flex-shrink:0;opacity:.6;}
+.text-block ul li strong{color:var(--fg);}
+
+/* ─── PANELS ─── */
+.panel{
+  background:var(--panel);border:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.panel-head{
+  background:var(--panel2);padding:.8rem 1.2rem;
+  font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dim);display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid var(--border);
+}
+.panel-head .ph-status{color:var(--green2);}
+
+/* ─── VIS 1: SERIAL PROBE / PORT SCAN ─── */
+.vis-probe{padding:1.5rem;display:flex;flex-direction:column;gap:.75rem;}
+.probe-row{
+  display:flex;align-items:center;gap:1rem;font-size:.65rem;
+  padding:.6rem .8rem;border:1px solid transparent;
+  transition:border-color .3s,background .3s;
+}
+.probe-row.active{border-color:var(--border);background:rgba(245,158,11,.04);}
+.probe-row.found{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.05);}
+.pr-port{color:var(--amber);width:70px;flex-shrink:0;}
+.pr-baud{color:var(--dim);width:70px;}
+.pr-status{margin-left:auto;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;}
+.pr-status.scanning{color:var(--amber);animation:blink 1s step-end infinite;}
+.pr-status.found-s{color:var(--green2);}
+.pr-status.idle{color:var(--dim);}
+.pr-bar{flex:1;height:2px;background:rgba(255,255,255,.04);}
+.pr-bar-fill{height:100%;background:var(--amber);animation:probe-scan 2s ease-in-out infinite;}
+.probe-row.found .pr-bar-fill{background:var(--green2);animation:none;width:100%;}
+
+@keyframes probe-scan{0%,100%{width:0%}50%{width:85%}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ─── VIS 2: LIVE UART HEX DUMP ─── */
+.vis-uart{
+  padding:1.2rem;font-family:'DM Mono',monospace;font-size:.68rem;
+  line-height:1.6;height:220px;overflow:hidden;position:relative;
+}
+.uart-stream{display:flex;flex-direction:column;gap:.35rem;animation:streamUp 3s linear infinite;}
+.uart-row{display:flex;gap:1.2rem;align-items:baseline;}
+.ur-ts{color:rgba(212,232,200,.25);width:50px;flex-shrink:0;font-size:.58rem;}
+.ur-hex{color:var(--amber2);letter-spacing:.08em;flex:1;}
+.ur-hex .hl{background:rgba(34,197,94,.25);color:var(--green2);padding:0 3px;}
+.ur-hex .hl2{background:rgba(245,158,11,.2);color:var(--amber);padding:0 3px;}
+.ur-ascii{color:rgba(212,232,200,.25);font-size:.6rem;white-space:nowrap;}
+@keyframes streamUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
+
+/* ─── VIS 3: WAVEFORM DECODE ─── */
+.vis-wave{padding:1.5rem;height:160px;position:relative;}
+.vis-wave svg{width:100%;height:100%;overflow:visible;}
+.wave-line{stroke:var(--amber);stroke-width:1.5;fill:none;}
+.wave-label{font-family:'DM Mono',monospace;font-size:.55rem;fill:var(--dim);}
+.wave-bit{font-size:.48rem;fill:var(--green2);}
+.wave-mark{stroke:rgba(74,222,128,.4);stroke-width:1;stroke-dasharray:2,3;}
+
+/* ─── SPECS GRID ─── */
+.specs-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:1px;
+  background:var(--border);border-top:1px solid var(--border);
+}
+.spec-box{background:var(--panel2);padding:1.2rem 1rem;}
+.sb-label{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem;}
+.sb-value{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;color:var(--fg);line-height:1.3;}
+
+/* ─── BOTTOM FULL SPAN ─── */
+.full-span{
+  grid-column:1/-1;margin-top:2rem;
+  border-top:1px solid var(--border);padding-top:4rem;
+  display:grid;grid-template-columns:1fr 1fr;gap:4rem;
+}
+
+/* ─── ARCHITECTURE DIAGRAM ─── */
+.arch-panel{padding:2rem;}
+.arch-nodes{display:flex;flex-direction:column;gap:1.5rem;position:relative;}
+.arch-node{
+  border:1px solid var(--border);padding:1rem 1.5rem;
+  display:flex;align-items:center;gap:1.5rem;
+  background:var(--panel2);position:relative;
+  transition:border-color .3s,box-shadow .3s;
+}
+.arch-node:hover{border-color:var(--amber);box-shadow:0 0 20px rgba(245,158,11,.1);}
+.an-icon{font-size:1.4rem;width:36px;text-align:center;flex-shrink:0;}
+.an-info{flex:1;}
+.an-title{font-family:'Syne',sans-serif;font-size:.85rem;font-weight:700;color:var(--fg);}
+.an-desc{font-size:.6rem;color:var(--dim);margin-top:.25rem;letter-spacing:.05em;}
+.an-status{
+  font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;
+  padding:.2rem .6rem;border:1px solid;
+}
+.an-status.ok{color:var(--green2);border-color:rgba(74,222,128,.3);}
+.an-status.sniff{color:var(--amber);border-color:rgba(245,158,11,.3);}
+.arch-connector{
+  width:2px;height:20px;background:linear-gradient(to bottom,var(--amber),var(--green2));
+  margin-left:53px;opacity:.4;
+}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:960px){
+  .content-grid{grid-template-columns:1fr;padding:2rem;}
+  .full-span{grid-template-columns:1fr;}
+  .header-hero{padding:8rem 2rem 3rem;}
+  nav{padding:1.2rem 2rem;}
+}
+
+.reveal{opacity:0;transform:translateY(35px);}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div class="circuit-bg"></div>
+
+<nav>
+  <a href="main.html" class="back-link">Return to Main OS</a>
+  <div class="sys-badge">PROBE: ACTIVE</div>
+</nav>
+
+<header class="header-hero reveal">
+  <div class="h-meta"><span>PRJ_01</span><span>Hardware Reverse-Engineering</span></div>
+  <h1 class="h-title">Robotic Vacuum<br><em>Diagnostic System</em></h1>
+  <p class="h-desc">A complete hardware and software forensic ecosystem built to interface directly with undocumented robotic vacuum mainboards. Sniffs UART and serial data streams, reverse-engineers proprietary command packets, and injects custom payloads to achieve full system control without manufacturer documentation.</p>
+  <div class="h-tags">
+    <span class="h-tag">UART</span>
+    <span class="h-tag">Serial Protocols</span>
+    <span class="h-tag">Hex Analysis</span>
+    <span class="h-tag">CRC Decoding</span>
+    <span class="h-tag">Logic Analyser</span>
+    <span class="h-tag">Packet Injection</span>
+    <span class="h-tag">Python</span>
+  </div>
+</header>
+
+<main>
+<div class="content-grid">
+
+  <!-- LEFT: TEXT -->
+  <div class="text-block reveal">
+    <h3>The Problem: No Documentation Exists</h3>
+    <p>Chinese robotic vacuum manufacturers ship units with custom mainboards running undocumented proprietary firmware. There is no public API, no open serial protocol, and no diagnostic port exposed to the user. The hardware is a sealed black box.</p>
+    <p>To build a proper diagnostic tool, I had to create the documentation myself — by reading the raw electrical signals directly off the board using a <strong>Saleae Logic Analyzer</strong>, physically probing unlabeled test points until I identified active UART buses.</p>
+
+    <h3 style="margin-top:3rem;">Phase 1 — Bus Discovery</h3>
+    <ul>
+      <li><strong>Physical Probing:</strong> Using a multimeter and scope, I identified 3.3V UART activity between the mainboard MCU and the sensor module.</li>
+      <li><strong>Baud Rate Cracking:</strong> By capturing the raw signal timing and calculating pulse widths, I deduced a non-standard baud rate of 115200 bps, 8N1.</li>
+      <li><strong>Differential Analysis:</strong> Captured 2000+ packet samples during normal operation to identify repeated preamble bytes (0x5A 0xA5) marking packet boundaries.</li>
+    </ul>
+  </div>
+
+  <!-- RIGHT: PANELS -->
+  <div class="reveal" style="display:flex;flex-direction:column;gap:2.5rem;">
+
+    <!-- Panel: Port Scanner -->
+    <div class="panel">
+      <div class="panel-head">
+        <span>Serial Port Discovery</span>
+        <span class="ph-status">● SCANNING</span>
+      </div>
+      <div class="vis-probe">
+        <div class="probe-row found">
+          <span class="pr-port">/dev/ttyS0</span>
+          <span class="pr-baud">115200</span>
+          <div class="pr-bar"><div class="pr-bar-fill"></div></div>
+          <span class="pr-status found-s">LOCKED</span>
+        </div>
+        <div class="probe-row active">
+          <span class="pr-port">/dev/ttyUSB0</span>
+          <span class="pr-baud">9600</span>
+          <div class="pr-bar"><div class="pr-bar-fill"></div></div>
+          <span class="pr-status scanning">PROBING</span>
+        </div>
+        <div class="probe-row">
+          <span class="pr-port">/dev/ttyUSB1</span>
+          <span class="pr-baud">256000</span>
+          <div class="pr-bar"><div class="pr-bar-fill"></div></div>
+          <span class="pr-status idle">IDLE</span>
+        </div>
+        <div class="probe-row">
+          <span class="pr-port">/dev/ttyACM0</span>
+          <span class="pr-baud">38400</span>
+          <div class="pr-bar"><div class="pr-bar-fill"></div></div>
+          <span class="pr-status idle">IDLE</span>
+        </div>
+      </div>
+      <div class="specs-grid">
+        <div class="spec-box"><div class="sb-label">Bus Identified</div><div class="sb-value">UART / 8N1</div></div>
+        <div class="spec-box"><div class="sb-label">Baud Rate</div><div class="sb-value">115200 bps</div></div>
+      </div>
+    </div>
+
+    <!-- Panel: Waveform -->
+    <div class="panel">
+      <div class="panel-head">
+        <span>UART Waveform Decode</span>
+        <span style="color:var(--amber);">CH1: TX LINE</span>
+      </div>
+      <div class="vis-wave">
+        <svg viewBox="0 0 400 80">
+          <!-- Axis -->
+          <line x1="0" y1="65" x2="400" y2="65" stroke="rgba(212,232,200,.1)" stroke-width="1"/>
+          <!-- UART frame: START + 8 bits + STOP -->
+          <!-- Idle HIGH -->
+          <polyline class="wave-line" points="0,10 30,10"/>
+          <!-- START bit LOW -->
+          <polyline class="wave-line" points="30,10 30,60 50,60"/>
+          <!-- D0=1 -->
+          <polyline class="wave-line" points="50,60 50,10 70,10"/>
+          <!-- D1=0 -->
+          <polyline class="wave-line" points="70,10 70,60 90,60"/>
+          <!-- D2=1 -->
+          <polyline class="wave-line" points="90,60 90,10 110,10"/>
+          <!-- D3=1 -->
+          <polyline class="wave-line" points="110,10 130,10"/>
+          <!-- D4=0 -->
+          <polyline class="wave-line" points="130,10 130,60 150,60"/>
+          <!-- D5=1 -->
+          <polyline class="wave-line" points="150,60 150,10 170,10"/>
+          <!-- D6=0 -->
+          <polyline class="wave-line" points="170,10 170,60 190,60"/>
+          <!-- D7=1 -->
+          <polyline class="wave-line" points="190,60 190,10 210,10"/>
+          <!-- STOP HIGH -->
+          <polyline class="wave-line" points="210,10 240,10"/>
+          <!-- Next frame -->
+          <polyline class="wave-line" points="240,10 240,60 260,60 260,10 280,10 280,60 300,60 300,10 320,10 320,60 340,60 340,10 380,10"/>
+
+          <!-- Bit labels -->
+          <text class="wave-label" x="32" y="78">S</text>
+          <text class="wave-bit" x="52" y="24">1</text>
+          <text class="wave-bit" x="72" y="78">0</text>
+          <text class="wave-bit" x="92" y="24">1</text>
+          <text class="wave-bit" x="112" y="24">1</text>
+          <text class="wave-bit" x="132" y="78">0</text>
+          <text class="wave-bit" x="152" y="24">1</text>
+          <text class="wave-bit" x="172" y="78">0</text>
+          <text class="wave-bit" x="192" y="24">1</text>
+          <text class="wave-label" x="212" y="24">STOP</text>
+
+          <!-- Marker lines -->
+          <line x1="30" y1="0" x2="30" y2="65" class="wave-mark"/>
+          <line x1="210" y1="0" x2="210" y2="65" class="wave-mark"/>
+        </svg>
+      </div>
+      <div class="specs-grid">
+        <div class="spec-box"><div class="sb-label">Byte Captured</div><div class="sb-value" style="color:var(--amber);">0x5A — Preamble</div></div>
+        <div class="spec-box"><div class="sb-label">Bit Timing</div><div class="sb-value">8.68µs / bit</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM FULL-SPAN -->
+  <div class="full-span">
+    <!-- Architecture -->
+    <div class="text-block reveal">
+      <h3>Phase 2 — Packet Deconstruction</h3>
+      <p>With the bus confirmed, every byte stream was captured during known operations (fan on, navigation start, dock command). By comparing hundreds of captures against corresponding behaviours, I built a packet-map.</p>
+      <p>The proprietary protocol uses a <strong>fixed-header framing scheme</strong>: preamble (0x5A 0xA5), a 1-byte command ID, a 1-byte payload length, N payload bytes, and a trailing <strong>custom CRC-8 checksum</strong> computed against the payload bytes only. I reverse-engineered the CRC polynomial by trial and error against captured packets.</p>
+      <ul>
+        <li><strong>Payload Injection:</strong> A custom Python bridge (PySerial) rebuilds packets with modified command bytes and injects them onto the bus, overriding vacuum behaviour in real-time.</li>
+        <li><strong>Live Decoder GUI:</strong> A Python/Tkinter interface decodes incoming hex streams into human-readable command labels, timestamps, and status indicators.</li>
+        <li><strong>Full Packet Map:</strong> Documented 24 unique command IDs covering motor control, sensor polling, error states, and map transmission payloads.</li>
+      </ul>
+    </div>
+
+    <!-- Architecture diagram -->
+    <div class="panel reveal">
+      <div class="panel-head"><span>System Architecture</span><span style="color:var(--amber);">MITM Bridge</span></div>
+      <div class="arch-panel">
+        <div class="arch-nodes">
+          <div class="arch-node">
+            <div class="an-icon">🤖</div>
+            <div class="an-info">
+              <div class="an-title">Vacuum Mainboard MCU</div>
+              <div class="an-desc">Proprietary Allwinner SoC / undocumented firmware</div>
+            </div>
+            <div class="an-status ok">SOURCE</div>
+          </div>
+          <div class="arch-connector"></div>
+          <div class="arch-node">
+            <div class="an-icon">🔬</div>
+            <div class="an-info">
+              <div class="an-title">Saleae Logic Analyser</div>
+              <div class="an-desc">Passive tap — 24MHz capture, 8 channels</div>
+            </div>
+            <div class="an-status sniff">SNIFFING</div>
+          </div>
+          <div class="arch-connector"></div>
+          <div class="arch-node">
+            <div class="an-icon">💻</div>
+            <div class="an-info">
+              <div class="an-title">Python Diagnostic Host</div>
+              <div class="an-desc">PySerial bridge + Tkinter decoder GUI</div>
+            </div>
+            <div class="an-status ok">INJECTING</div>
+          </div>
+        </div>
+      </div>
+      <div class="specs-grid">
+        <div class="spec-box"><div class="sb-label">Commands Mapped</div><div class="sb-value">24 unique IDs</div></div>
+        <div class="spec-box"><div class="sb-label">Checksum</div><div class="sb-value">CRC-8 (Custom Poly)</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UART STREAM PANEL — full span -->
+  <div class="panel reveal" style="grid-column:1/-1;margin-top:2rem;">
+    <div class="panel-head">
+      <span>Live RX Buffer — Decoded Stream</span>
+      <span class="ph-status">● LIVE CAPTURE @ 115200 bps</span>
+    </div>
+    <div class="vis-uart">
+      <div class="uart-stream">
+        <div class="uart-row"><span class="ur-ts">12:04:01</span><span class="ur-hex"><span class="hl2">5A A5</span> <span class="hl">0C</span> 06 00 00 FF FF 00 <span class="hl">B2</span></span><span class="ur-ascii">Z ¥ . . . . . . .</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:01</span><span class="ur-hex"><span class="hl2">5A A5</span> <span class="hl">11</span> 02 44 1B <span class="hl">C7</span></span><span class="ur-ascii">Z ¥ . . D . Ç</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:02</span><span class="ur-hex"><span class="hl2">5A A5</span> 04 <span class="hl">03</span> 00 00 6E F1</span><span class="ur-ascii">Z ¥ . . . . n ñ</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:02</span><span class="ur-hex"><span class="hl2">5A A5</span> <span class="hl">0C</span> 06 00 00 00 01 00 <span class="hl">51</span></span><span class="ur-ascii">Z ¥ . . . . . Q</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:03</span><span class="ur-hex"><span class="hl2">5A A5</span> <span class="hl">21</span> 08 FF 00 12 00 00 A1 2C <span class="hl">9E</span></span><span class="ur-ascii">Z ¥ ! . . . . . , ž</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:03</span><span class="ur-hex"><span class="hl2">5A A5</span> 04 <span class="hl">03</span> 00 00 6E F1</span><span class="ur-ascii">Z ¥ . . . . n ñ</span></div>
+        <!-- duplicated for scroll -->
+        <div class="uart-row"><span class="ur-ts">12:04:04</span><span class="ur-hex"><span class="hl2">5A A5</span> <span class="hl">0C</span> 06 00 00 FF FF 00 <span class="hl">B2</span></span><span class="ur-ascii">Z ¥ . . . . . . .</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:04</span><span class="ur-hex"><span class="hl2">5A A5</span> <span class="hl">11</span> 02 44 1B <span class="hl">C7</span></span><span class="ur-ascii">Z ¥ . . D . Ç</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:05</span><span class="ur-hex"><span class="hl2">5A A5</span> 04 <span class="hl">03</span> 00 00 6E F1</span><span class="ur-ascii">Z ¥ . . . . n ñ</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:05</span><span class="ur-hex"><span class="hl2">5A A5</span> <span class="hl">21</span> 08 FF 00 12 00 00 A1 2C <span class="hl">9E</span></span><span class="ur-ascii">Z ¥ ! . . . . . , ž</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:06</span><span class="ur-hex"><span class="hl2">5A A5</span> <span class="hl">0C</span> 06 00 00 00 01 00 <span class="hl">51</span></span><span class="ur-ascii">Z ¥ . . . . . Q</span></div>
+        <div class="uart-row"><span class="ur-ts">12:04:06</span><span class="ur-hex"><span class="hl2">5A A5</span> 04 <span class="hl">03</span> 00 00 6E F1</span><span class="ur-ascii">Z ¥ . . . . n ñ</span></div>
+      </div>
+    </div>
+    <div class="specs-grid">
+      <div class="spec-box"><div class="sb-label">Preamble Bytes</div><div class="sb-value" style="color:var(--amber);">0x5A 0xA5 (Highlighted)</div></div>
+      <div class="spec-box"><div class="sb-label">Command ID</div><div class="sb-value" style="color:var(--green2);">3rd Byte (Green)</div></div>
+      <div class="spec-box"><div class="sb-label">Packets/Second</div><div class="sb-value">~18 Hz average</div></div>
+      <div class="spec-box"><div class="sb-label">Capture Tool</div><div class="sb-value">PySerial + Saleae</div></div>
+    </div>
+  </div>
+
+</div><!-- end content-grid -->
+</main>
+
+<script>
+const cur = document.getElementById('cur');
+const curRing = document.getElementById('cur-ring');
+let mx=0, my=0, rx=0, ry=0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cur.style.left = mx + 'px';
+  cur.style.top  = my + 'px';
+});
+(function ring(){
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) * 0.12;
+  curRing.style.left = rx + 'px';
+  curRing.style.top  = ry + 'px';
+  requestAnimationFrame(ring);
+})();
+
+document.querySelectorAll('a, .panel, .arch-node').forEach(el => {
+  el.addEventListener('mouseenter', () => document.body.classList.add('hov'));
+  el.addEventListener('mouseleave', () => document.body.classList.remove('hov'));
+});
+
+gsap.registerPlugin(ScrollTrigger);
+gsap.utils.toArray('.reveal').forEach(el => {
+  gsap.fromTo(el,
+    { opacity: 0, y: 40 },
+    { opacity: 1, y: 0, duration: 1.1, ease: 'power3.out',
+      scrollTrigger: { trigger: el, start: 'top 85%', once: true } }
+  );
+});
+</script>
+</body>
+</html>
